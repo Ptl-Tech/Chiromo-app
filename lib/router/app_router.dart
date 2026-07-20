@@ -81,22 +81,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/welcome',
         name: 'welcome',
-        builder: (_, _) => const WelcomeScreen(),
+        pageBuilder: (_, _) => _fadePage(const WelcomeScreen()),
       ),
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (_, _) => const LoginScreen(),
+        pageBuilder: (_, _) => _fadePage(const LoginScreen()),
       ),
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (_, _) => const RegisterScreen(),
+        pageBuilder: (_, _) => _fadePage(const RegisterScreen()),
       ),
       GoRoute(
         path: '/forgot-password',
         name: 'forgot-password',
-        builder: (_, _) => const ForgotPasswordScreen(),
+        pageBuilder: (_, _) => _fadePage(const ForgotPasswordScreen()),
       ),
 
       // ── Authenticated routes (wrapped in AppShell) ────────────
