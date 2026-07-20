@@ -331,7 +331,7 @@ class _AppointmentsByFilter extends ConsumerWidget {
               case _AppointmentFilter.cancelled:
                 appts =
                     appointments
-                        .where((a) => a.status == AppConstants.statusCancelled)
+                        .where((a) => a.status == AppConstants.statusCancelled || a.status == AppConstants.statusRejected)
                         .toList()
                       ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
                 break;
@@ -388,7 +388,7 @@ class _AppointmentsByFilter extends ConsumerWidget {
                   statusText = 'Completed';
                 } else if (filter == _AppointmentFilter.cancelled) {
                   statusColor = ChiromoColors.error;
-                  statusText = 'Cancelled';
+                  statusText = appt.status == AppConstants.statusRejected ? 'Rejected' : 'Cancelled';
                 }
 
                 return Padding(

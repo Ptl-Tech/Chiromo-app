@@ -69,7 +69,7 @@ class AppointmentHistoryScreen extends ConsumerWidget {
         if (appt.status == 'confirmed') {
           statusColor = ChiromoColors.statusConfirmed;
         }
-        if (appt.status == 'cancelled') {
+        if (appt.status == 'cancelled' || appt.status == 'rejected') {
           statusColor = ChiromoColors.statusCancelled;
         }
         if (appt.status == 'completed') {

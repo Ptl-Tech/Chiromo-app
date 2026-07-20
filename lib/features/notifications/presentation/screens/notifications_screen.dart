@@ -176,7 +176,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     } else if (notification.isDoctorMessage) {
       context.go('/patient/messages');
     } else if (notification.isCbtFeedback) {
-      context.go('/patient/cbt');
+      context.push('/patient/cbt');
     }
   }
 
