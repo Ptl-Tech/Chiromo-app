@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../theme/chiromo_theme.dart';
+import '../../../../theme/chiromo_colors.dart';
 import '../../domain/entities/notification_entity.dart';
 
 class NotificationDetailScreen extends StatelessWidget {
@@ -62,7 +62,7 @@ class NotificationDetailScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: ChiromoColors.primary.withOpacity(0.15),
+                      color: ChiromoColors.primary.withValues(alpha: 0.15),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -84,13 +84,13 @@ class NotificationDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
                   ],
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.05),
+                    color: theme.dividerColor.withValues(alpha: 0.05),
                   ),
                 ),
                 child: Column(
@@ -119,7 +119,7 @@ class NotificationDetailScreen extends StatelessWidget {
                     Text(
                       notification.body,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.85),
                         height: 1.6,
                       ),
                     ),
