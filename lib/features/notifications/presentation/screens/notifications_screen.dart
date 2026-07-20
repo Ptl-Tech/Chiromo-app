@@ -170,14 +170,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
     if (!mounted) return;
 
-    // Navigate based on notification type
-    if (notification.isAppointment) {
-      context.go('/patient/history');
-    } else if (notification.isDoctorMessage) {
-      context.go('/patient/messages');
-    } else if (notification.isCbtFeedback) {
-      context.push('/patient/cbt');
-    }
+    // Navigate to the new detail screen
+    context.push('/patient/notifications/detail', extra: notification);
   }
 
   void _markAllAsRead() async {
