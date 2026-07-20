@@ -58,8 +58,8 @@ class AppShell extends ConsumerWidget {
               destinations: navItems
                   .map(
                     (item) => NavigationRailDestination(
-                      icon: Icon(item.icon),
-                      selectedIcon: Icon(item.activeIcon),
+                      icon: _buildIcon(item, selected: false),
+                      selectedIcon: _buildIcon(item, selected: true),
                       label: Text(item.label),
                     ),
                   )
@@ -81,14 +81,50 @@ class AppShell extends ConsumerWidget {
         destinations: navItems
             .map(
               (item) => NavigationDestination(
-                icon: Icon(item.icon),
-                selectedIcon: Icon(item.activeIcon),
+                icon: _buildIcon(item, selected: false),
+                selectedIcon: _buildIcon(item, selected: true),
                 label: item.label,
               ),
             )
             .toList(),
       ),
     );
+  }
+
+  Widget _buildIcon(_NavItem item, {required bool selected}) {
+    if (item.imageAsset != null) {
+      if (selected) {
+        return Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: ChiromoColors.primary.withValues(alpha: 0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Image.asset(item.imageAsset!, fit: BoxFit.contain),
+        );
+      } else {
+        return Opacity(
+          opacity: 0.6,
+          child: ColorFiltered(
+            colorFilter: const ColorFilter.matrix(<double>[
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0,      0,      0,      1, 0,
+            ]),
+            child: Image.asset(item.imageAsset!, width: 28, height: 28),
+          ),
+        );
+      }
+    }
+    return Icon(selected ? item.activeIcon : item.icon);
   }
 
   int _currentIndex(BuildContext context, List<_NavItem> items) {
@@ -117,31 +153,11 @@ class AppShell extends ConsumerWidget {
     switch (role) {
       case UserRole.patient:
         return const [
-          _NavItem('Home', Icons.home_outlined, Icons.home, '/patient'),
-          _NavItem(
-            'Appointments',
-            Icons.event_outlined,
-            Icons.event,
-            '/patient/history',
-          ),
-          _NavItem(
-            'My Health',
-            Icons.favorite_outlined,
-            Icons.favorite,
-            '/patient/health',
-          ),
-          _NavItem(
-            'Messages',
-            Icons.chat_outlined,
-            Icons.chat,
-            '/patient/messages',
-          ),
-          _NavItem(
-            'Profile',
-            Icons.person_outline,
-            Icons.person,
-            '/patient/profile',
-          ),
+          _NavItem('Home', Icons.home_outlined, Icons.home, '/patient', 'assets/images/nav/home.png'),
+          _NavItem('Appointments', Icons.event_outlined, Icons.event, '/patient/history', 'assets/images/nav/appointments.png'),
+          _NavItem('My Health', Icons.favorite_outlined, Icons.favorite, '/patient/health', 'assets/images/nav/health.png'),
+          _NavItem('Messages', Icons.chat_outlined, Icons.chat, '/patient/messages', 'assets/images/nav/messages.png'),
+          _NavItem('Profile', Icons.person_outline, Icons.person, '/patient/profile', 'assets/images/nav/profile.png'),
         ];
       case UserRole.doctor:
       case UserRole.psychiatrist:
@@ -261,8 +277,9 @@ class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String route;
+  final String? imageAsset;
 
-  const _NavItem(this.label, this.icon, this.activeIcon, this.route);
+  const _NavItem(this.label, this.icon, this.activeIcon, this.route, [this.imageAsset]);
 }
 
 /// Expanded sidebar used on desktop breakpoints.
@@ -357,13 +374,33 @@ class _DesktopSidebar extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              selected ? item.activeIcon : item.icon,
-                              size: 22,
-                              color: selected
-                                  ? ChiromoColors.primary
-                                  : ChiromoColors.textSecondary,
-                            ),
+                            if (item.imageAsset != null)
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: ColorFiltered(
+                                  colorFilter: selected
+                                      ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                                      : const ColorFilter.matrix(<double>[
+                                          0.2126, 0.7152, 0.0722, 0, 0,
+                                          0.2126, 0.7152, 0.0722, 0, 0,
+                                          0.2126, 0.7152, 0.0722, 0, 0,
+                                          0,      0,      0,      1, 0,
+                                        ]),
+                                  child: Opacity(
+                                    opacity: selected ? 1.0 : 0.6,
+                                    child: Image.asset(item.imageAsset!),
+                                  ),
+                                ),
+                              )
+                            else
+                              Icon(
+                                selected ? item.activeIcon : item.icon,
+                                size: 22,
+                                color: selected
+                                    ? ChiromoColors.primary
+                                    : ChiromoColors.textSecondary,
+                              ),
                             const SizedBox(width: 14),
                             Text(
                               item.label,

@@ -245,43 +245,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/patient/book',
         name: 'book-appointment',
-        builder: (_, _) => const BookAppointmentScreen(),
+        pageBuilder: (_, _) => _fadePage(const BookAppointmentScreen()),
       ),
       GoRoute(
         path: '/patient/doctors',
         name: 'browse-doctors',
-        builder: (_, _) => const BrowseDoctorsScreen(),
+        pageBuilder: (_, _) => _fadePage(const BrowseDoctorsScreen()),
       ),
       GoRoute(
         path: '/patient/messages/chat/:doctorId',
         name: 'patient-chat',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final doctorId = state.pathParameters['doctorId']!;
           final doctorName = state.uri.queryParameters['doctorName'] ?? 'Doctor';
           final specialty = state.uri.queryParameters['specialty'] ?? 'General Practice';
           final avatarUrl = state.uri.queryParameters['avatarUrl'];
-          return PatientChatScreen(
+          return _fadePage(PatientChatScreen(
             doctorId: doctorId,
             doctorName: doctorName,
             specialty: specialty,
             avatarUrl: avatarUrl,
-          );
+          ));
         },
       ),
       GoRoute(
         path: '/patient/cbt',
         name: 'cbt-tools',
-        builder: (_, _) => const CbtToolsScreen(),
+        pageBuilder: (_, _) => _fadePage(const CbtToolsScreen()),
       ),
       GoRoute(
         path: '/patient/cbt/thought-record',
         name: 'thought-record',
-        builder: (_, _) => const ThoughtRecordScreen(),
+        pageBuilder: (_, _) => _fadePage(const ThoughtRecordScreen()),
       ),
       GoRoute(
         path: '/patient/cbt/behavioral-activation',
         name: 'behavioral-activation',
-        builder: (_, _) => const BehavioralActivationScreen(),
+        pageBuilder: (_, _) => _fadePage(const BehavioralActivationScreen()),
       ),
       GoRoute(
         path: '/patient/cbt/exposure-ladder',

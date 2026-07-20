@@ -3,6 +3,7 @@ import '../models/notification_model.dart';
 
 class NotificationRemoteDataSource {
   final _client = SupabaseService.client;
+  static List<NotificationModel>? _cachedDummyNotifications;
 
   /// Fetch all notifications for the current user, newest first.
   Future<List<NotificationModel>> getNotifications() async {
@@ -31,6 +32,24 @@ class NotificationRemoteDataSource {
   /// Mark a single notification as read.
   Future<void> markAsRead(String notificationId) async {
     try {
+      // Update dummy data locally
+      if (_cachedDummyNotifications != null) {
+        final idx = _cachedDummyNotifications!.indexWhere((n) => n.id == notificationId);
+        if (idx != -1) {
+          final old = _cachedDummyNotifications![idx];
+          _cachedDummyNotifications![idx] = NotificationModel(
+            id: old.id,
+            userId: old.userId,
+            title: old.title,
+            body: old.body,
+            type: old.type,
+            isRead: true, // marked read
+            metadata: old.metadata,
+            createdAt: old.createdAt,
+          );
+        }
+      }
+
       await _client
           .from('notifications')
           .update({'is_read': true})
@@ -41,6 +60,20 @@ class NotificationRemoteDataSource {
   /// Mark all notifications for the current user as read.
   Future<void> markAllAsRead() async {
     try {
+      // Update dummy data locally
+      if (_cachedDummyNotifications != null) {
+        _cachedDummyNotifications = _cachedDummyNotifications!.map((old) => NotificationModel(
+            id: old.id,
+            userId: old.userId,
+            title: old.title,
+            body: old.body,
+            type: old.type,
+            isRead: true, // marked read
+            metadata: old.metadata,
+            createdAt: old.createdAt,
+          )).toList();
+      }
+
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return;
       await _client
@@ -53,8 +86,10 @@ class NotificationRemoteDataSource {
 
   /// Fallback notifications for demo / offline mode.
   List<NotificationModel> _getDummyNotifications() {
+    if (_cachedDummyNotifications != null) return _cachedDummyNotifications!;
+    
     final now = DateTime.now();
-    return [
+    _cachedDummyNotifications = [
       NotificationModel(
         id: 'notif-1',
         userId: 'demo',
@@ -106,5 +141,6 @@ class NotificationRemoteDataSource {
         createdAt: now.subtract(const Duration(days: 3)),
       ),
     ];
+    return _cachedDummyNotifications!;
   }
 }

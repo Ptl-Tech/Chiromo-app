@@ -77,6 +77,8 @@ flutter:
     - assets/images/
     - assets/images/quick_actions/
     - assets/images/cbt_tools/
+    - assets/images/notifications/
+    - assets/images/nav/
     - assets/illustrations/
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -84,6 +84,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             ),
             child: TabBar(
               controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 color: ChiromoColors.primary,
@@ -171,11 +172,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
     // Navigate based on notification type
     if (notification.isAppointment) {
-      context.push('/patient/history');
+      context.go('/patient/history');
     } else if (notification.isDoctorMessage) {
-      context.push('/patient/messages');
+      context.go('/patient/messages');
     } else if (notification.isCbtFeedback) {
-      context.push('/patient/cbt');
+      context.go('/patient/cbt');
     }
   }
 
