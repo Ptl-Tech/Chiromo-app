@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../widgets/layouts/app_scaffold.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../notifications/presentation/providers/notification_providers.dart';
 import '../../domain/entities/cbt_exercise_entity.dart';
 import '../../presentation/providers/cbt_providers.dart';
 import '../widgets/patient_dashboard_widgets.dart';
@@ -99,12 +100,60 @@ class PatientDashboardScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: ChiromoColors.primaryDark,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final unreadCount = ref.watch(unreadNotificationCountProvider);
+                      return GestureDetector(
+                        onTap: () => context.push('/patient/notifications'),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.notifications_outlined,
+                                color: ChiromoColors.primaryDark,
+                                size: 22,
+                              ),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: ChiromoColors.error,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.scaffoldBackgroundColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 9 ? '9+' : '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -235,9 +284,7 @@ class PatientDashboardScreen extends ConsumerWidget {
               children: [
                 SmallStat(title: dayStreak, subtitle: 'check-ins'),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: SmallStat(title: avgMood, subtitle: 'Avg Mood'),
-                ),
+                SmallStat(title: avgMood, subtitle: 'Avg Mood'),
               ],
             ),
             const SizedBox(height: 12),

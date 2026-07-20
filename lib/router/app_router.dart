@@ -36,6 +36,7 @@ import '../features/reception/presentation/screens/reception_dashboard_screen.da
 import '../features/reception/presentation/screens/queue_management_screen.dart';
 import '../features/cashier/presentation/screens/cashier_dashboard_screen.dart';
 
+import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../widgets/layouts/app_shell.dart';
 
 /// GoRouter provider – rebuilds when auth state changes.
@@ -291,6 +292,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/patient/cbt/daily-checkin',
         name: 'daily-checkin',
         builder: (_, _) => const DailyCheckinScreen(),
+      ),
+      GoRoute(
+        path: '/patient/notifications',
+        name: 'patient-notifications',
+        builder: (_, _) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/patient/records',
