@@ -362,7 +362,7 @@ class _NotificationCard extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.all(8),
                 child: Image.asset(
-                  _imageForType(notification.type),
+                  _imageForType(notification),
                   fit: BoxFit.contain,
                 ),
               ),
@@ -425,19 +425,22 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  String _imageForType(String type) {
-    switch (type) {
+  String _imageForType(NotificationEntity notification) {
+    switch (notification.type) {
       case 'appointment_confirmed':
       case 'appointment_reminder':
         return 'assets/images/notifications/appointment.png';
       case 'doctor_message':
         return 'assets/images/notifications/message.png';
       case 'cbt_feedback':
+        if (notification.title.toLowerCase().contains('thought')) {
+          return 'assets/images/cbt_tools/thought_record.png';
+        }
         return 'assets/images/notifications/cbt.png';
       case 'system':
-        return 'assets/images/notifications/system.png';
+        return 'assets/images/app_icon.png';
       default:
-        return 'assets/images/notifications/system.png';
+        return 'assets/images/app_icon.png';
     }
   }
 

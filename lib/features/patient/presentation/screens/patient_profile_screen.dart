@@ -319,19 +319,22 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                           _buildProfileTile(
                             Icons.notifications_outlined,
                             'Notifications',
-                            'Enabled',
+                            'Manage alerts & reminders',
+                            onTap: _showNotificationsSettings,
                           ),
                           const Divider(height: 32),
                           _buildProfileTile(
                             Icons.security_outlined,
-                            'Privacy & Security',
-                            'Manage passwords and data',
+                            'Privacy & Terms',
+                            'Read our policies & terms of service',
+                            onTap: _showPrivacyPolicy,
                           ),
                           const Divider(height: 32),
                           _buildProfileTile(
                             Icons.help_outline,
                             'Help & Support',
                             'Contact us or view FAQs',
+                            onTap: _showHelpSupport,
                           ),
                           const SizedBox(height: 20),
                           ChiromoButton(
@@ -629,6 +632,205 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     }
   }
 
+  void _showNotificationsSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Notification Preferences',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            SwitchListTile(
+              title: const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Receive alerts for appointments and messages'),
+              value: true,
+              activeColor: ChiromoColors.primary,
+              onChanged: (val) {
+                // Future integration: update user preferences
+              },
+            ),
+            const Divider(),
+            SwitchListTile(
+              title: const Text('Email Updates', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Weekly check-in summaries and tips'),
+              value: false,
+              activeColor: ChiromoColors.primary,
+              onChanged: (val) {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Privacy & Terms',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Chiromo Hospital Group Data Policy',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'At Chiromo Hospital Group (CHG), your privacy and mental health records are treated with the highest degree of confidentiality in accordance with the Data Protection Act of Kenya and international healthcare ethics. Our staff are mandated to protect patient privacy as part of their professional responsibilities.',
+                      style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Terms of Service',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'By using this application, you agree to CHG\'s operational and administrative guidelines when accessing services, scheduling appointments, or making payments. This platform serves as an extension of our in-patient, out-patient, and virtual center services.',
+                      style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: ChiromoColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('I Understand', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showHelpSupport() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Help & Support',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Get in touch with Chiromo Hospital Group Client Services.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: ChiromoColors.surfaceVariant,
+                child: Icon(Icons.phone, color: ChiromoColors.primary),
+              ),
+              title: const Text('+254 0750 927 232', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('24/7 Helpline'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: ChiromoColors.surfaceVariant,
+                child: Icon(Icons.email, color: ChiromoColors.primary),
+              ),
+              title: const Text('clientservices@chiromohg.co.ke', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Email Support'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: ChiromoColors.surfaceVariant,
+                child: Icon(Icons.location_on, color: ChiromoColors.primary),
+              ),
+              title: const Text('37 Muthangari Road', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Nairobi, Kenya'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -646,7 +848,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     );
   }
 
-  Widget _buildProfileTile(IconData icon, String title, String subtitle) {
+  Widget _buildProfileTile(IconData icon, String title, String subtitle, {VoidCallback? onTap}) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 6),
       minLeadingWidth: 0,
@@ -674,7 +876,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
         color: ChiromoColors.textTertiary,
         size: 20,
       ),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 

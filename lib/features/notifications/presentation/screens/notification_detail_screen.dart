@@ -10,15 +10,19 @@ class NotificationDetailScreen extends StatelessWidget {
 
   const NotificationDetailScreen({super.key, required this.notification});
 
-  String _imageForType(String type) {
-    if (type.startsWith('appointment')) {
-      return 'assets/images/notifications/notif_appointment_3d.png';
-    } else if (type == 'doctor_message') {
-      return 'assets/images/notifications/notif_message_3d.png';
-    } else if (type == 'cbt_feedback') {
-      return 'assets/images/notifications/notif_cbt_3d.png';
+  String _imageForType(NotificationEntity notification) {
+    if (notification.type.startsWith('appointment')) {
+      return 'assets/images/notifications/appointment.png';
+    } else if (notification.type == 'doctor_message') {
+      return 'assets/images/notifications/message.png';
+    } else if (notification.type == 'cbt_feedback') {
+      if (notification.title.toLowerCase().contains('thought')) {
+        return 'assets/images/cbt_tools/thought_record.png';
+      }
+      return 'assets/images/notifications/cbt.png';
     } else {
-      return 'assets/images/notifications/notif_system_3d.png';
+      // Use app logo for system notifications
+      return 'assets/images/app_icon.png';
     }
   }
 
@@ -69,7 +73,7 @@ class NotificationDetailScreen extends StatelessWidget {
                   ],
                 ),
                 child: Image.asset(
-                  _imageForType(notification.type),
+                  _imageForType(notification),
                   fit: BoxFit.contain,
                 ),
               ),
