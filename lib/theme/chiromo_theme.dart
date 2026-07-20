@@ -212,11 +212,14 @@ class ChiromoTheme {
       // ── Navigation Bar (M3) ──
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: ChiromoColors.surface,
-        indicatorColor: ChiromoColors.primary,
-        indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        indicatorColor: Colors.transparent,
+        indicatorShape: const CircleBorder(),
+        height: 72,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: Colors.white, size: 26);
+            return const IconThemeData(color: ChiromoColors.primary, size: 28);
           }
           return const IconThemeData(color: ChiromoColors.textTertiary, size: 24);
         }),
@@ -224,14 +227,15 @@ class ChiromoTheme {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontFamily: _fontFamily,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
               color: ChiromoColors.primary,
+              letterSpacing: 0.3,
             );
           }
           return const TextStyle(
             fontFamily: _fontFamily,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
             color: ChiromoColors.textTertiary,
           );

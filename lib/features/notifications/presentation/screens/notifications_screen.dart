@@ -350,31 +350,26 @@ class _NotificationCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon
+              // 3D Icon
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _iconGradient(notification.type),
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: _iconBgColor(notification.type),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: _iconGradient(notification.type)
-                          .first
+                      color: _iconBgColor(notification.type)
                           .withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Icon(
-                  _iconForType(notification.type),
-                  color: Colors.white,
-                  size: 22,
+                padding: const EdgeInsets.all(8),
+                child: Image.asset(
+                  _imageForType(notification.type),
+                  fit: BoxFit.contain,
                 ),
               ),
               const SizedBox(width: 14),
@@ -436,37 +431,36 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  IconData _iconForType(String type) {
+  String _imageForType(String type) {
     switch (type) {
       case 'appointment_confirmed':
-        return Icons.event_available_rounded;
       case 'appointment_reminder':
-        return Icons.access_time_filled_rounded;
+        return 'assets/images/notifications/appointment.png';
       case 'doctor_message':
-        return Icons.chat_bubble_rounded;
+        return 'assets/images/notifications/message.png';
       case 'cbt_feedback':
-        return Icons.psychology_rounded;
+        return 'assets/images/notifications/cbt.png';
       case 'system':
-        return Icons.info_rounded;
+        return 'assets/images/notifications/system.png';
       default:
-        return Icons.notifications_rounded;
+        return 'assets/images/notifications/system.png';
     }
   }
 
-  List<Color> _iconGradient(String type) {
+  Color _iconBgColor(String type) {
     switch (type) {
       case 'appointment_confirmed':
-        return [ChiromoColors.success, const Color(0xFF00C853)];
+        return const Color(0xFFE8F5E9);
       case 'appointment_reminder':
-        return [ChiromoColors.warning, ChiromoColors.goldDark];
+        return const Color(0xFFFFF3E0);
       case 'doctor_message':
-        return [ChiromoColors.info, const Color(0xFF2979FF)];
+        return const Color(0xFFE3F2FD);
       case 'cbt_feedback':
-        return [ChiromoColors.crimson, const Color(0xFFE91E63)];
+        return const Color(0xFFFCE4EC);
       case 'system':
-        return [ChiromoColors.primaryDark, ChiromoColors.primary];
+        return const Color(0xFFE8FDF5);
       default:
-        return [ChiromoColors.primary, ChiromoColors.primaryLight];
+        return const Color(0xFFE8FDF5);
     }
   }
 

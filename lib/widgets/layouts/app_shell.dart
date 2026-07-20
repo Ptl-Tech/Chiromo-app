@@ -75,18 +75,36 @@ class AppShell extends ConsumerWidget {
     // Mobile
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (i) => context.go(navItems[i].route),
-        destinations: navItems
-            .map(
-              (item) => NavigationDestination(
-                icon: _buildIcon(item, selected: false),
-                selectedIcon: _buildIcon(item, selected: true),
-                label: item.label,
-              ),
-            )
-            .toList(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: ChiromoColors.primary.withValues(alpha: 0.08),
+              width: 1,
+            ),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: currentIndex,
+          onDestinationSelected: (i) => context.go(navItems[i].route),
+          destinations: navItems
+              .map(
+                (item) => NavigationDestination(
+                  icon: _buildIcon(item, selected: false),
+                  selectedIcon: _buildIcon(item, selected: true),
+                  label: item.label,
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }
@@ -94,33 +112,39 @@ class AppShell extends ConsumerWidget {
   Widget _buildIcon(_NavItem item, {required bool selected}) {
     if (item.imageAsset != null) {
       if (selected) {
-        return Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: ChiromoColors.primary.withValues(alpha: 0.4),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: ChiromoColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Image.asset(item.imageAsset!, fit: BoxFit.contain),
+              child: Image.asset(item.imageAsset!, fit: BoxFit.contain),
+            ),
+            const SizedBox(height: 2),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: ChiromoColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
         );
       } else {
         return Opacity(
-          opacity: 0.6,
-          child: ColorFiltered(
-            colorFilter: const ColorFilter.matrix(<double>[
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0,      0,      0,      1, 0,
-            ]),
-            child: Image.asset(item.imageAsset!, width: 28, height: 28),
-          ),
+          opacity: 0.45,
+          child: Image.asset(item.imageAsset!, width: 28, height: 28),
         );
       }
     }
