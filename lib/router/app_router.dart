@@ -12,6 +12,8 @@ import '../features/patient/presentation/screens/patient_dashboard_screen.dart';
 import '../features/patient/presentation/screens/book_appointment_screen.dart';
 import '../features/patient/presentation/screens/browse_doctors_screen.dart';
 import '../features/patient/presentation/screens/patient_profile_screen.dart';
+import '../features/patient/presentation/screens/emergency_screen.dart';
+import '../features/patient/presentation/screens/edit_safety_plan_screen.dart';
 import '../features/patient/presentation/screens/patient_records_screen.dart';
 import '../features/patient/presentation/screens/appointment_history_screen.dart';
 import '../features/patient/presentation/screens/cbt_tools_screen.dart';
@@ -135,6 +137,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'patient-profile',
             pageBuilder: (_, _) =>
                 _fadePage(const PatientProfileScreen()),
+          ),
+          GoRoute(
+            path: '/patient/emergency',
+            name: 'patient-emergency',
+            pageBuilder: (_, _) =>
+                _fadePage(const EmergencyScreen()),
+          ),
+          GoRoute(
+            path: '/patient/emergency/safety-plan',
+            name: 'patient-safety-plan',
+            pageBuilder: (_, _) =>
+                _fadePage(const EditSafetyPlanScreen()),
           ),
 
           // Doctor

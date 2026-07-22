@@ -84,7 +84,7 @@ class CbtToolsScreen extends ConsumerWidget {
                 iconColor: ChiromoColors.primary,
                 title: 'New Exposure Ladder',
                 subtitle: 'Build a hierarchy of fears to face gradually',
-                onTap: () => context.go('/patient/cbt/exposure-ladder'),
+                onTap: () => context.push('/patient/cbt/exposure-ladder'),
               ),
               const SizedBox(height: 28),
 
@@ -106,7 +106,7 @@ class CbtToolsScreen extends ConsumerWidget {
                 title: 'Thought Record',
                 subtitle:
                     'Challenge negative thoughts & improve cognitive flexibility',
-                onTap: () => context.go('/patient/cbt/thought-record'),
+                onTap: () => context.push('/patient/cbt/thought-record'),
               ),
               const SizedBox(height: 12),
               _ExerciseCard(
@@ -116,7 +116,7 @@ class CbtToolsScreen extends ConsumerWidget {
                 iconColor: const Color(0xFFEF6C00),
                 title: 'Behavioral Activation',
                 subtitle: 'Schedule activities and build healthy routines',
-                onTap: () => context.go('/patient/cbt/behavioral-activation'),
+                onTap: () => context.push('/patient/cbt/behavioral-activation'),
               ),
               const SizedBox(height: 12),
               _ExerciseCard(
@@ -126,7 +126,7 @@ class CbtToolsScreen extends ConsumerWidget {
                 iconColor: const Color(0xFF2E7D32),
                 title: 'Exposure Ladder',
                 subtitle: 'Face fears gradually with a guided hierarchy',
-                onTap: () => context.go('/patient/cbt/exposure-ladder'),
+                onTap: () => context.push('/patient/cbt/exposure-ladder'),
               ),
               const SizedBox(height: 12),
               _ExerciseCard(
@@ -136,7 +136,7 @@ class CbtToolsScreen extends ConsumerWidget {
                 iconColor: ChiromoColors.primary,
                 title: 'Daily Check-in',
                 subtitle: 'Track your mood, symptoms, and daily wins',
-                onTap: () => context.go('/patient/cbt/daily-checkin'),
+                onTap: () => context.push('/patient/cbt/daily-checkin'),
               ),
               const SizedBox(height: 32),
 

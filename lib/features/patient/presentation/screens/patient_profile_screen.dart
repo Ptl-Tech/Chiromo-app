@@ -101,6 +101,18 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     final user = ref.watch(authNotifierProvider).valueOrNull;
     final theme = Theme.of(context);
 
+    String dobSubtitle = 'Not provided';
+    if (user?.dateOfBirth != null) {
+      final dob = user!.dateOfBirth!.toLocal();
+      final dateStr = dob.toIso8601String().split('T').first;
+      final now = DateTime.now();
+      int age = now.year - dob.year;
+      if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+        age--;
+      }
+      dobSubtitle = '$dateStr ($age yrs old)';
+    }
+
     return AppScaffold(
       title: 'My Profile',
       actions: [
@@ -271,13 +283,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                           _buildInfoRow(
                             icon: Icons.calendar_today_outlined,
                             title: 'Date of Birth',
-                            subtitle: user?.dateOfBirth != null
-                                ? user!.dateOfBirth!
-                                      .toLocal()
-                                      .toIso8601String()
-                                      .split('T')
-                                      .first
-                                : 'Not provided',
+                            subtitle: dobSubtitle,
                             onTap: () async {
                               await _showEditProfileDialog(context, user);
                             },
@@ -376,260 +382,280 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     final bioController = TextEditingController(text: user.bio ?? '');
     DateTime? selectedDob = user?.dateOfBirth as DateTime?;
 
-    final isNarrow = MediaQuery.of(context).size.width < 600;
-    if (isNarrow) {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        builder: (ctx) {
-          final dobText = selectedDob != null
-              ? selectedDob!.toLocal().toIso8601String().split('T').first
-              : 'Not set';
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            ),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            final dobText = selectedDob != null
+                ? selectedDob!.toLocal().toIso8601String().split('T').first
+                : 'Select your date of birth';
+                
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Edit profile',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(ctx).pop(),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.grey.shade100,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: firstNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'First name',
-                      ),
-                    ),
-                    TextField(
-                      controller: lastNameController,
-                      decoration: const InputDecoration(labelText: 'Last name'),
-                    ),
-                    TextField(
-                      controller: phoneController,
-                      decoration: const InputDecoration(labelText: 'Phone'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: bioController,
-                      decoration: const InputDecoration(labelText: 'Bio'),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text('Date of birth:'),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(dobText)),
-                        TextButton(
-                          onPressed: () async {
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildModernTextField(
+                                controller: firstNameController,
+                                label: 'First Name',
+                                icon: Icons.person_outline,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildModernTextField(
+                                controller: lastNameController,
+                                label: 'Last Name',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildModernTextField(
+                          controller: phoneController,
+                          label: 'Phone Number',
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildModernTextField(
+                          controller: bioController,
+                          label: 'Bio',
+                          icon: Icons.info_outline,
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Date of Birth',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
                             final picked = await showDatePicker(
                               context: ctx,
                               initialDate: selectedDob ?? DateTime(1990, 1, 1),
                               firstDate: DateTime(1900),
                               lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: ChiromoColors.primary,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
                             );
                             if (picked != null) {
-                              selectedDob = picked;
-                              (ctx as Element).markNeedsBuild();
+                              setState(() {
+                                selectedDob = picked;
+                              });
                             }
                           },
-                          child: const Text('Change'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            child: const Text('Cancel'),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: ChiromoColors.surfaceVariant.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.transparent),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today_outlined, color: ChiromoColors.textSecondary, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    dobText,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: selectedDob != null ? Colors.black87 : ChiromoColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.edit_calendar, color: ChiromoColors.primary, size: 20),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              Navigator.of(ctx).pop();
-                              try {
-                                final updatedUser = await ref
-                                    .read(authRepositoryProvider)
-                                    .updateProfile(
-                                      firstName:
-                                          firstNameController.text
-                                              .trim()
-                                              .isEmpty
-                                          ? null
-                                          : firstNameController.text.trim(),
-                                      lastName:
-                                          lastNameController.text.trim().isEmpty
-                                          ? null
-                                          : lastNameController.text.trim(),
-                                      phone: phoneController.text.trim().isEmpty
-                                          ? null
-                                          : phoneController.text.trim(),
-                                      dateOfBirth: selectedDob,
-                                      bio: bioController.text.trim().isEmpty
-                                          ? null
-                                          : bioController.text.trim(),
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                child: const Text('Cancel', style: TextStyle(color: Colors.black87)),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () async {
+                                  Navigator.of(ctx).pop();
+                                  try {
+                                    final updatedUser = await ref
+                                        .read(authRepositoryProvider)
+                                        .updateProfile(
+                                          firstName: firstNameController.text.trim().isEmpty
+                                              ? null
+                                              : firstNameController.text.trim(),
+                                          lastName: lastNameController.text.trim().isEmpty
+                                              ? null
+                                              : lastNameController.text.trim(),
+                                          phone: phoneController.text.trim().isEmpty
+                                              ? null
+                                              : phoneController.text.trim(),
+                                          dateOfBirth: selectedDob,
+                                          bio: bioController.text.trim().isEmpty
+                                              ? null
+                                              : bioController.text.trim(),
+                                        );
+                                    ref
+                                        .read(authNotifierProvider.notifier)
+                                        .updateCurrentUser(updatedUser);
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Profile updated successfully'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
                                     );
-                                ref
-                                    .read(authNotifierProvider.notifier)
-                                    .updateCurrentUser(updatedUser);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Profile updated'),
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed to update profile: $e'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  backgroundColor: ChiromoColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                );
-                              } catch (e) {
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Failed to update profile'),
-                                  ),
-                                );
-                              }
-                            },
-                            child: const Text('Save'),
-                          ),
+                                ),
+                                child: const Text('Save Changes'),
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                  ],
+                  ),
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    IconData? icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            prefixIcon: icon != null ? Icon(icon, color: ChiromoColors.textSecondary, size: 20) : null,
+            filled: true,
+            fillColor: ChiromoColors.surfaceVariant.withValues(alpha: 0.5),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
-          );
-        },
-      );
-    } else {
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) {
-          final dobText = selectedDob != null
-              ? selectedDob!.toLocal().toIso8601String().split('T').first
-              : 'Not set';
-          return AlertDialog(
-            title: const Text('Edit profile'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: firstNameController,
-                    decoration: const InputDecoration(labelText: 'First name'),
-                  ),
-                  TextField(
-                    controller: lastNameController,
-                    decoration: const InputDecoration(labelText: 'Last name'),
-                  ),
-                  TextField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: bioController,
-                    decoration: const InputDecoration(labelText: 'Bio'),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Text('Date of birth:'),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(dobText)),
-                      TextButton(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: ctx,
-                            initialDate: selectedDob ?? DateTime(1990, 1, 1),
-                            firstDate: DateTime(1900),
-                            lastDate: DateTime.now(),
-                          );
-                          if (picked != null) {
-                            selectedDob = picked;
-                            // Force rebuild of the dialog
-                            (ctx as Element).markNeedsBuild();
-                          }
-                        },
-                        child: const Text('Change'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: ChiromoColors.primary, width: 2),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  try {
-                    final updatedUser = await ref
-                        .read(authRepositoryProvider)
-                        .updateProfile(
-                          firstName: firstNameController.text.trim().isEmpty
-                              ? null
-                              : firstNameController.text.trim(),
-                          lastName: lastNameController.text.trim().isEmpty
-                              ? null
-                              : lastNameController.text.trim(),
-                          phone: phoneController.text.trim().isEmpty
-                              ? null
-                              : phoneController.text.trim(),
-                          dateOfBirth: selectedDob,
-                          bio: bioController.text.trim().isEmpty
-                              ? null
-                              : bioController.text.trim(),
-                        );
-                    ref
-                        .read(authNotifierProvider.notifier)
-                        .updateCurrentUser(updatedUser);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile updated')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Failed to update profile')),
-                    );
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+          ),
+        ),
+      ],
+    );
   }
 
   void _showNotificationsSettings() {

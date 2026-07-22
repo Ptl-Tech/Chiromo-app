@@ -9,13 +9,13 @@ import '../../../../theme/chiromo_colors.dart';
 import '../screens/appointment_detail_screen.dart';
 
 class MoodButton extends StatelessWidget {
-  final String emoji;
+  final String imageUrl;
   final String label;
   final VoidCallback onTap;
 
   const MoodButton({
     super.key,
-    required this.emoji,
+    required this.imageUrl,
     required this.label,
     required this.onTap,
   });
@@ -27,13 +27,33 @@ class MoodButton extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: Theme.of(context).canvasColor,
-            child: Text(emoji, style: const TextStyle(fontSize: 20)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).canvasColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Image.network(
+              imageUrl,
+              width: 32,
+              height: 32,
+              errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 32),
+            ),
           ),
           const SizedBox(height: 6),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
         ],
       ),
     );
@@ -228,8 +248,76 @@ class AppointmentTabs extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final appointmentsAsync = ref.watch(patientAppointmentsProvider);
+
+    int upcomingCount = 0;
+    int recentCount = 0;
+    int cancelledCount = 0;
+    
+    final now = DateTime.now();
+    Color? upcomingCountColor;
+
+    appointmentsAsync.whenData((appointments) {
+      final upcomingAppts = appointments.where((a) => a.scheduledAt.isAfter(now) && a.status != AppConstants.statusCancelled).toList();
+      upcomingCount = upcomingAppts.length;
+      
+      if (upcomingAppts.isNotEmpty) {
+        upcomingAppts.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+        final closest = upcomingAppts.first.scheduledAt;
+        final difference = closest.difference(now).inDays;
+        if (difference <= 2) {
+          upcomingCountColor = ChiromoColors.error; // Very soon -> Red
+        } else if (difference <= 7) {
+          upcomingCountColor = ChiromoColors.warning; // Within a week -> Orange
+        } else {
+          upcomingCountColor = ChiromoColors.success; // Further out -> Green
+        }
+      }
+
+      recentCount = appointments.where((a) => a.scheduledAt.isBefore(now) && a.status != AppConstants.statusCancelled && a.status != AppConstants.statusRejected).length;
+      cancelledCount = appointments.where((a) => a.status == AppConstants.statusCancelled || a.status == AppConstants.statusRejected).length;
+    });
+
+    Widget buildTab(String title, int count, [Color? badgeColor]) {
+      return Tab(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title),
+            if (count > 0) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: badgeColor ?? theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: badgeColor != null ? Colors.white : theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    int initialIndex = 0;
+    if (upcomingCount == 0) {
+      if (recentCount > 0) {
+        initialIndex = 1;
+      } else if (cancelledCount > 0) {
+        initialIndex = 2;
+      }
+    }
 
     return DefaultTabController(
+      initialIndex: initialIndex,
       length: 3,
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -248,6 +336,7 @@ class AppointmentTabs extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TabBar(
+              labelPadding: EdgeInsets.zero,
               labelColor: theme.colorScheme.primary,
               unselectedLabelColor: theme.hintColor,
               indicator: UnderlineTabIndicator(
@@ -257,10 +346,10 @@ class AppointmentTabs extends ConsumerWidget {
                 ),
                 insets: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              tabs: const [
-                Tab(text: 'Upcoming'),
-                Tab(text: 'Recent'),
-                Tab(text: 'Cancelled'),
+              tabs: [
+                buildTab('Upcoming', upcomingCount, upcomingCountColor),
+                buildTab('Recent', recentCount),
+                buildTab('Cancelled', cancelledCount),
               ],
             ),
             const SizedBox(height: 12),
@@ -323,7 +412,8 @@ class _AppointmentsByFilter extends ConsumerWidget {
                         .where(
                           (a) =>
                               a.scheduledAt.isBefore(now) &&
-                              a.status == AppConstants.statusCompleted,
+                              a.status != AppConstants.statusCancelled &&
+                              a.status != AppConstants.statusRejected,
                         )
                         .toList()
                       ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
@@ -383,12 +473,51 @@ class _AppointmentsByFilter extends ConsumerWidget {
 
                 Color statusColor = ChiromoColors.primary;
                 String statusText = 'Upcoming';
-                if (filter == _AppointmentFilter.recent) {
-                  statusColor = ChiromoColors.success;
-                  statusText = 'Completed';
-                } else if (filter == _AppointmentFilter.cancelled) {
-                  statusColor = ChiromoColors.error;
-                  statusText = appt.status == AppConstants.statusRejected ? 'Rejected' : 'Cancelled';
+                
+                switch (appt.status) {
+                  case AppConstants.statusCompleted:
+                    statusColor = ChiromoColors.success;
+                    statusText = 'Completed';
+                    break;
+                  case AppConstants.statusConfirmed:
+                    if (filter == _AppointmentFilter.recent) {
+                      statusColor = const Color(0xFF4CAF50);
+                      statusText = 'Attended';
+                    } else {
+                      statusColor = ChiromoColors.statusConfirmed;
+                      statusText = 'Confirmed';
+                    }
+                    break;
+                  case AppConstants.statusPending:
+                    statusColor = ChiromoColors.warning;
+                    statusText = 'Pending';
+                    break;
+                  case AppConstants.statusCheckedIn:
+                    statusColor = const Color(0xFF2196F3);
+                    statusText = 'Checked In';
+                    break;
+                  case AppConstants.statusInConsultation:
+                    statusColor = const Color(0xFF9C27B0);
+                    statusText = 'In Session';
+                    break;
+                  case AppConstants.statusCancelled:
+                    statusColor = ChiromoColors.error;
+                    statusText = 'Cancelled';
+                    break;
+                  case AppConstants.statusRejected:
+                    statusColor = ChiromoColors.error;
+                    statusText = 'Rejected';
+                    break;
+                  case AppConstants.statusNoShow:
+                    statusColor = ChiromoColors.textTertiary;
+                    statusText = 'No Show';
+                    break;
+                  case AppConstants.statusRescheduleRequested:
+                    statusColor = ChiromoColors.warning;
+                    statusText = 'Reschedule';
+                    break;
+                  default:
+                    statusText = appt.status.replaceAll('_', ' ').toUpperCase();
                 }
 
                 return Padding(

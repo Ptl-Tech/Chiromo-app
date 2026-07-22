@@ -179,7 +179,6 @@ class AppShell extends ConsumerWidget {
         return const [
           _NavItem('Home', Icons.home_outlined, Icons.home, '/patient', 'assets/images/nav/home.png'),
           _NavItem('Appointments', Icons.event_outlined, Icons.event, '/patient/history', 'assets/images/nav/appointments.png'),
-          _NavItem('My Health', Icons.favorite_outlined, Icons.favorite, '/patient/health', 'assets/images/nav/health.png'),
           _NavItem('Messages', Icons.chat_outlined, Icons.chat, '/patient/messages', 'assets/images/nav/messages.png'),
           _NavItem('Profile', Icons.person_outline, Icons.person, '/patient/profile', 'assets/images/nav/profile.png'),
         ];

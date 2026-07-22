@@ -10,7 +10,7 @@ class MockWelcomeDoctor {
   final String specialty;
   final String qualifications;
   final double rating;
-  final String imageUrl;
+  final String imagePath; // local asset
   final String quote;
 
   const MockWelcomeDoctor({
@@ -18,7 +18,7 @@ class MockWelcomeDoctor {
     required this.specialty,
     required this.qualifications,
     required this.rating,
-    required this.imageUrl,
+    required this.imagePath,
     required this.quote,
   });
 }
@@ -40,7 +40,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       specialty: 'Lead Psychiatrist',
       qualifications: 'MD, MMed (Psychiatry)',
       rating: 4.9,
-      imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+      imagePath: 'assets/images/doctors/doctor_female_1.png',
       quote: 'Recovery is a path of restoration and dignity. Let\'s walk it together.',
     ),
     MockWelcomeDoctor(
@@ -48,7 +48,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       specialty: 'Clinical Psychologist',
       qualifications: 'PhD in Clinical Psychology',
       rating: 4.8,
-      imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+      imagePath: 'assets/images/doctors/doctor_male_1.png',
       quote: 'Understanding your emotional wellness is the first step towards healing.',
     ),
     MockWelcomeDoctor(
@@ -56,7 +56,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       specialty: 'Therapist & Counselor',
       qualifications: 'MA in Counseling Psychology',
       rating: 4.9,
-      imageUrl: 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300',
+      imagePath: 'assets/images/doctors/doctor_female_2.png',
       quote: 'Providing a safe space for growth, resilience, and positive change.',
     ),
     MockWelcomeDoctor(
@@ -64,15 +64,48 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       specialty: 'Addiction Specialist',
       qualifications: 'MMed, Specialist in Recovery Care',
       rating: 4.7,
-      imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300',
+      imagePath: 'assets/images/doctors/doctor_male_2.png',
       quote: 'Empowering you to reclaim control and thrive in daily life.',
     ),
   ];
 
+  late final _autoSlideTimer = _startAutoSlide();
+
+  @override
+  void initState() {
+    super.initState();
+    // _autoSlideTimer is already initialised above
+  }
+
   @override
   void dispose() {
+    _autoSlideTimer.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Auto-slide every 4 seconds, looping back to the first card.
+  _AutoSlideTimer _startAutoSlide() {
+    return _AutoSlideTimer(
+      duration: const Duration(seconds: 4),
+      onTick: () {
+        if (!mounted || !_pageController.hasClients) return;
+        final nextPage = (_currentPage + 1) % _doctors.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      },
+    );
+  }
+
+  void _goToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -184,21 +217,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Doctor Carousel Section
+              // Doctor Carousel Section – NO auto-slide
               Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (int page) {
-                    setState(() {
-                      _currentPage = page;
-                    });
-                  },
-                  itemCount: _doctors.length,
-                  itemBuilder: (context, index) {
-                    final doctor = _doctors[index];
-                    return AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (context, child) {
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (int page) {
+                        setState(() {
+                          _currentPage = page;
+                        });
+                      },
+                      itemCount: _doctors.length,
+                      itemBuilder: (context, index) {
+                        final doctor = _doctors[index];
                         return Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24.0,
@@ -231,8 +263,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     child: Stack(
                                       fit: StackFit.expand,
                                       children: [
-                                        Image.network(
-                                          doctor.imageUrl,
+                                        Image.asset(
+                                          doctor.imagePath,
                                           fit: BoxFit.cover,
                                           errorBuilder: (context, error, stackTrace) {
                                             return Container(
@@ -244,6 +276,25 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                               ),
                                             );
                                           },
+                                        ),
+                                        // Gradient overlay for readability
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          height: 60,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.transparent,
+                                                  (isDark ? ChiromoColors.darkSurface : Colors.white).withValues(alpha: 0.8),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                         Positioned(
                                           top: 16,
@@ -324,12 +375,55 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           ),
                         );
                       },
-                    );
-                  },
+                    ),
+                    // Left Arrow
+                    if (_currentPage > 0)
+                      Positioned(
+                        left: 4,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: Material(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () => _goToPage(_currentPage - 1),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Right Arrow
+                    if (_currentPage < _doctors.length - 1)
+                      Positioned(
+                        right: 4,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: Material(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () => _goToPage(_currentPage + 1),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.chevron_right, color: Colors.white, size: 28),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               
-              // Page Indicator
+              // Page Indicator + Counter
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -348,7 +442,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 6),
+              Text(
+                '${_currentPage + 1} of ${_doctors.length}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isDark ? ChiromoColors.darkTextSecondary : ChiromoColors.textTertiary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // Bottom Actions
               Padding(
@@ -379,4 +481,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       ),
     );
   }
+}
+
+/// A simple periodic timer wrapper for the auto-slide carousel.
+class _AutoSlideTimer {
+  late final _ticker = Stream.periodic(duration).listen((_) => onTick());
+  final Duration duration;
+  final VoidCallback onTick;
+
+  _AutoSlideTimer({required this.duration, required this.onTick});
+
+  void cancel() => _ticker.cancel();
 }

@@ -181,7 +181,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (phone != null) updates['phone_number'] = phone;
     if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
     if (dateOfBirth != null) {
-      updates['date_of_birth'] = dateOfBirth.toIso8601String();
+      updates['date_of_birth'] = dateOfBirth.toIso8601String().split('T').first;
     }
     if (bio != null) updates['bio'] = bio;
 

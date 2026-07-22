@@ -16,15 +16,15 @@ class CbtExerciseModel extends CbtExerciseEntity {
 
   factory CbtExerciseModel.fromJson(Map<String, dynamic> json) {
     return CbtExerciseModel(
-      id: json['id'] as String,
-      patientId: json['patient_id'] as String,
-      type: CbtExerciseType.fromString(json['type'] as String),
+      id: json['id'] as String? ?? '',
+      patientId: json['patient_id'] as String? ?? '',
+      type: CbtExerciseType.fromString(json['type'] as String? ?? ''),
       title: json['title'] as String?,
       data: Map<String, dynamic>.from(json['data'] as Map? ?? {}),
       isShared: json['is_shared'] as bool? ?? false,
       hasDoctorFeedback: json['has_doctor_feedback'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'].toString()) : DateTime.now(),
     );
   }
 

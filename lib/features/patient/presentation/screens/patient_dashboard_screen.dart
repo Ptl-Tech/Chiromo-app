@@ -52,12 +52,22 @@ class PatientDashboardScreen extends ConsumerWidget {
       title: 'Patient Portal',
       showBack: false,
       showAppBar: false,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/patient/emergency'),
+        backgroundColor: ChiromoColors.error,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.emergency),
+        label: const Text(
+          'SOS',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
             // Fixed Header (Does not scroll)
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
               child: Row(
                 children: [
                   CircleAvatar(
@@ -205,11 +215,11 @@ class PatientDashboardScreen extends ConsumerWidget {
                       spacing: 12,
                       runSpacing: 12,
                       children: [
-                        MoodButton(label: 'Awful', emoji: '😞', onTap: () => _saveMood(context, ref, 2, user?.id)),
-                        MoodButton(label: 'Bad', emoji: '😕', onTap: () => _saveMood(context, ref, 4, user?.id)),
-                        MoodButton(label: 'Okay', emoji: '😐', onTap: () => _saveMood(context, ref, 6, user?.id)),
-                        MoodButton(label: 'Good', emoji: '🙂', onTap: () => _saveMood(context, ref, 8, user?.id)),
-                        MoodButton(label: 'Great', emoji: '😁', onTap: () => _saveMood(context, ref, 10, user?.id)),
+                        MoodButton(label: 'Awful', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png', onTap: () => _saveMood(context, ref, 2, user?.id)),
+                        MoodButton(label: 'Bad', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png', onTap: () => _saveMood(context, ref, 4, user?.id)),
+                        MoodButton(label: 'Okay', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png', onTap: () => _saveMood(context, ref, 6, user?.id)),
+                        MoodButton(label: 'Good', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png', onTap: () => _saveMood(context, ref, 8, user?.id)),
+                        MoodButton(label: 'Great', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png', onTap: () => _saveMood(context, ref, 10, user?.id)),
                       ],
                     ),
                   ],
@@ -217,11 +227,6 @@ class PatientDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
             ],
-
-            // Appointment / Session tabs
-            const AppointmentTabs(),
-
-            const SizedBox(height: 14),
 
             // Quick actions grid
             Text(
@@ -269,6 +274,11 @@ class PatientDashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 18),
+
+            // Appointment / Session tabs
+            const AppointmentTabs(),
 
             const SizedBox(height: 18),
 
@@ -336,7 +346,13 @@ class PatientDashboardScreen extends ConsumerWidget {
                       mood: (e.mood ?? 0).clamp(0, 10).toInt(),
                     )).toList();
 
-                    return _MoodChart(data: chartData);
+                    return Column(
+                      children: [
+                        _MoodChart(data: chartData),
+                        const SizedBox(height: 16),
+                        _MoodInsightsCard(data: chartData),
+                      ],
+                    );
                   },
                 ),
             const SizedBox(height: 24),
@@ -401,17 +417,41 @@ class _MoodChart extends StatelessWidget {
       spots.add(FlSpot(i.toDouble(), data[i].mood.toDouble()));
     }
 
+    // Calculate average mood
+    final avgMood = data.isEmpty
+        ? 0.0
+        : data.map((e) => e.mood).reduce((a, b) => a + b) / data.length;
+    // Determine trend
+    String trendLabel = 'Stable';
+    IconData trendIcon = Icons.remove;
+    Color trendColor = ChiromoColors.textSecondary;
+    if (data.length >= 2) {
+      final last = data.last.mood;
+      final prev = data[data.length - 2].mood;
+      if (last > prev) {
+        trendLabel = 'Improving';
+        trendIcon = Icons.trending_up_rounded;
+        trendColor = ChiromoColors.success;
+      } else if (last < prev) {
+        trendLabel = 'Declining';
+        trendIcon = Icons.trending_down_rounded;
+        trendColor = ChiromoColors.error;
+      }
+    }
+
     return Container(
-      height: 220,
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.1),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -419,21 +459,90 @@ class _MoodChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header with stats ──
           Row(
             children: [
-              Icon(Icons.timeline_rounded, size: 20, color: ChiromoColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Mood Trends',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: ChiromoColors.textPrimary,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: ChiromoColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.insights_rounded, size: 20, color: ChiromoColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mood Trends',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: ChiromoColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Last ${data.length} check-ins',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ChiromoColors.textTertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Avg Mood badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _moodColor(avgMood).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.network(
+                      _moodEmojiUrl(avgMood),
+                      width: 18,
+                      height: 18,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 18),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      avgMood.toStringAsFixed(1),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: _moodColor(avgMood),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Expanded(
+          const SizedBox(height: 6),
+          // Trend indicator
+          Row(
+            children: [
+              Icon(trendIcon, size: 16, color: trendColor),
+              const SizedBox(width: 4),
+              Text(
+                trendLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: trendColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // ── Chart ──
+          SizedBox(
+            height: 180,
             child: LineChart(
               LineChartData(
                 lineTouchData: LineTouchData(
@@ -442,12 +551,13 @@ class _MoodChart extends StatelessWidget {
                     getTooltipColor: (touchedSpot) => theme.colorScheme.surface,
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((LineBarSpot touchedSpot) {
+                        final mood = touchedSpot.y.toInt();
                         return LineTooltipItem(
-                          'Mood: ${touchedSpot.y.toInt()}/10',
+                          'Mood: $mood/10',
                           TextStyle(
                             color: theme.colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                         );
                       }).toList();
@@ -460,19 +570,20 @@ class _MoodChart extends StatelessWidget {
                   horizontalInterval: 2,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: theme.dividerColor.withValues(alpha: 0.1),
+                      color: theme.dividerColor.withValues(alpha: 0.08),
                       strokeWidth: 1,
+                      dashArray: [5, 5],
                     );
                   },
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 22,
+                      reservedSize: 24,
                       interval: 1,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
@@ -487,7 +598,7 @@ class _MoodChart extends StatelessWidget {
                             text,
                             style: TextStyle(
                               color: theme.hintColor,
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -498,16 +609,28 @@ class _MoodChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 2,
+                      interval: 5,
                       getTitlesWidget: (value, meta) {
-                        return Text(
-                          value.toInt().toString(),
-                          style: TextStyle(
-                            color: theme.hintColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                        final v = value.toInt();
+                        String url;
+                        if (v == 0) {
+                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
+                        } else if (v == 5) {
+                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
+                        } else if (v == 10) {
+                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png';
+                        } else {
+                          return const SizedBox();
+                        }
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 4,
+                          child: Image.network(
+                            url,
+                            width: 16,
+                            height: 16,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 16),
                           ),
-                          textAlign: TextAlign.center,
                         );
                       },
                       reservedSize: 28,
@@ -516,24 +639,27 @@ class _MoodChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: data.length > 0 ? (data.length - 1).toDouble() : 1,
+                maxX: data.length > 1 ? (data.length - 1).toDouble() : 1,
                 minY: 0,
                 maxY: 10,
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots.isEmpty ? [const FlSpot(0, 0)] : spots,
                     isCurved: true,
-                    color: ChiromoColors.primary,
-                    barWidth: 4,
+                    curveSmoothness: 0.35,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF42A5F5), ChiromoColors.primary, Color(0xFF66BB6A)],
+                    ),
+                    barWidth: 3.5,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
-                          radius: 4,
+                          radius: 5,
                           color: Colors.white,
-                          strokeWidth: 2.5,
-                          strokeColor: ChiromoColors.primary,
+                          strokeWidth: 3,
+                          strokeColor: _moodColor(spot.y),
                         );
                       },
                     ),
@@ -541,7 +667,8 @@ class _MoodChart extends StatelessWidget {
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          ChiromoColors.primary.withValues(alpha: 0.4),
+                          ChiromoColors.primary.withValues(alpha: 0.25),
+                          ChiromoColors.primary.withValues(alpha: 0.05),
                           ChiromoColors.primary.withValues(alpha: 0.0),
                         ],
                         begin: Alignment.topCenter,
@@ -557,4 +684,104 @@ class _MoodChart extends StatelessWidget {
       ),
     );
   }
+
+  Color _moodColor(double mood) {
+    if (mood <= 3) return const Color(0xFFEF5350);
+    if (mood <= 5) return const Color(0xFFFFA726);
+    if (mood <= 7) return const Color(0xFF42A5F5);
+    return const Color(0xFF66BB6A);
+  }
+
+  String _moodEmojiUrl(double mood) {
+    if (mood <= 2) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
+    if (mood <= 4) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png';
+    if (mood <= 6) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
+    if (mood <= 8) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png';
+    return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png';
+  }
 }
+
+class _MoodInsightsCard extends StatelessWidget {
+  final List<_ChartDataPoint> data;
+  const _MoodInsightsCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.isEmpty) return const SizedBox();
+
+    final theme = Theme.of(context);
+    final avgMood = data.map((e) => e.mood).reduce((a, b) => a + b) / data.length;
+    
+    String title = '';
+    String description = '';
+    IconData icon = Icons.auto_awesome;
+    Color color = ChiromoColors.primary;
+
+    if (avgMood >= 7.5) {
+      title = 'Doing Great!';
+      description = 'Your mood has been consistently high. Keep up the positive habits and behaviors that are working for you.';
+      icon = Icons.sentiment_very_satisfied;
+      color = ChiromoColors.success;
+    } else if (avgMood >= 4.5) {
+      title = 'Holding Steady';
+      description = 'You are maintaining a balanced mood. This is a great time to practice some mindfulness or CBT exercises to build resilience.';
+      icon = Icons.balance;
+      color = const Color(0xFF42A5F5);
+    } else {
+      title = 'Needs Attention';
+      description = 'We noticed your mood has been a bit low lately. Consider booking a session with your specialist or trying a Thought Record exercise today.';
+      icon = Icons.health_and_safety_outlined;
+      color = const Color(0xFFFFA726); // Orange warning
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    height: 1.4,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

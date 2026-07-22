@@ -115,125 +115,211 @@ class _BrowseDoctorsScreenState extends ConsumerState<BrowseDoctorsScreen> {
     required VoidCallback onChat,
     required VoidCallback onBook,
   }) {
+    final displayName = name.toLowerCase().startsWith('dr') ? name : 'Dr. $name';
+
     return Container(
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.16)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ChiromoColors.primary.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: ChiromoColors.primary.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
         child: Column(
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundImage: NetworkImage(imageUrl),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ChiromoColors.primary.withValues(alpha: 0.2),
+                        width: 2,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        specialty,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        qualifications,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isAvailable
-                                  ? ChiromoColors.successLight
-                                  : ChiromoColors.errorLight,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              isAvailable ? 'Available' : 'Offline',
-                              style: TextStyle(
-                                color: isAvailable
-                                    ? ChiromoColors.success
-                                    : ChiromoColors.error,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                    ),
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: ChiromoColors.surfaceVariant,
+                      backgroundImage: NetworkImage(imageUrl),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  color: ChiromoColors.textPrimary,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'KES ${fee.toStringAsFixed(0)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isAvailable
+                                    ? ChiromoColors.successLight
+                                    : ChiromoColors.errorLight,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: isAvailable
+                                          ? ChiromoColors.success
+                                          : ChiromoColors.error,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isAvailable ? 'Online' : 'Offline',
+                                    style: TextStyle(
+                                      color: isAvailable
+                                          ? ChiromoColors.success
+                                          : ChiromoColors.error,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          specialty,
+                          style: const TextStyle(
+                            color: ChiromoColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.school_rounded,
+                              size: 14,
+                              color: ChiromoColors.textTertiary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                qualifications,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: ChiromoColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: ChiromoColors.surfaceVariant.withValues(alpha: 0.3),
+                border: Border(
+                  top: BorderSide(
+                    color: ChiromoColors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Consultation Fee',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: ChiromoColors.textTertiary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'KES ${fee.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: ChiromoColors.textPrimary,
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onChat,
-                    icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                    label: const Text('Chat'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: onChat,
+                        icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                        label: const Text('Chat'),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onBook,
-                    icon: const Icon(Icons.calendar_month_outlined, size: 16),
-                    label: const Text('Book'),
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 8),
+                      FilledButton.icon(
+                        onPressed: onBook,
+                        icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                        label: const Text('Book'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: ChiromoColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
