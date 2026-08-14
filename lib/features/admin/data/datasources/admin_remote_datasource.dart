@@ -8,34 +8,68 @@ class AdminRemoteDataSource {
   AdminRemoteDataSource(this._client);
 
   Future<List<BranchModel>> getBranches() async {
-    try {
-      final data = await _client.from('branches').select().order('name');
-      return data.map((json) => BranchModel.fromJson(json)).toList();
-    } catch (e) {
-      // If table doesn't exist yet, return dummy data to avoid breaking the UI during dev
-      if (e.toString().contains('relation "public.branches" does not exist')) {
-        return _getDummyBranches();
-      }
-      rethrow;
-    }
+    final data = await _client.from('branches').select().order('name');
+    return data.map((json) => BranchModel.fromJson(json)).toList();
   }
 
   Future<AnalyticsDataEntity> getAnalyticsData() async {
-    try {
-      // Attempt to fetch from analytics_logs table.
-      // When the table schema is defined, parse real data here.
-      await _client.from('analytics_logs').select().limit(10);
-      return _getDummyAnalytics();
-    } catch (e) {
-      return _getDummyAnalytics();
+    // Attempt to fetch from analytics_logs table and map real data.
+    // If the table structure is missing, this will throw an error as expected for 'real data' wiring.
+    final response = await _client.from('analytics_logs').select();
+
+    // Process response into AnalyticsDataEntity
+    // Assuming simple mapping for now since exact schema wasn't provided, but it enforces real DB usage.
+    List<RevenuePoint> revenue = [];
+    List<DepartmentPoint> department = [];
+    for (var item in response) {
+      if (item['type'] == 'revenue') {
+        revenue.add(
+          RevenuePoint(
+            label: item['label'] ?? '',
+            value: (item['value'] ?? 0).toDouble(),
+          ),
+        );
+      } else if (item['type'] == 'department') {
+        department.add(
+          DepartmentPoint(
+            department: item['label'] ?? '',
+            count: item['value'] ?? 0,
+          ),
+        );
+      }
     }
+    return AnalyticsDataEntity(
+      revenueData: revenue,
+      departmentData: department,
+    );
   }
 
   List<BranchModel> _getDummyBranches() {
     return [
-      BranchModel(id: '1', name: 'Chiromo Lane', type: 'Headquarters', location: 'Muthithi Road, Westlands', isActive: true, createdAt: DateTime.now()),
-      BranchModel(id: '2', name: 'Bustani', type: 'Rehabilitation Center', location: 'Lavington, Nairobi', isActive: true, createdAt: DateTime.now()),
-      BranchModel(id: '3', name: 'Mombasa Branch', type: 'Outpatient Clinic', location: 'Nyali, Mombasa', isActive: false, createdAt: DateTime.now()),
+      BranchModel(
+        id: '1',
+        name: 'Chiromo Lane',
+        type: 'Headquarters',
+        location: 'Muthithi Road, Westlands',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      BranchModel(
+        id: '2',
+        name: 'Bustani',
+        type: 'Rehabilitation Center',
+        location: 'Lavington, Nairobi',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      BranchModel(
+        id: '3',
+        name: 'Mombasa Branch',
+        type: 'Outpatient Clinic',
+        location: 'Nyali, Mombasa',
+        isActive: false,
+        createdAt: DateTime.now(),
+      ),
     ];
   }
 

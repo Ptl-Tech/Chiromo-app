@@ -49,6 +49,10 @@ dependencies:
   image_picker: ^1.2.3
   shimmer: ^3.0.0
   url_launcher: ^6.3.2
+  local_auth: ^3.0.2
+  flutter_secure_storage: ^11.0.0
+  dio: ^5.4.0
+  pinput: ^6.0.2
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +80,8 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/icons/
+    - assets/icons/3d/
     - assets/images/quick_actions/
     - assets/images/cbt_tools/
     - assets/images/notifications/

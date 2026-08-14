@@ -424,9 +424,16 @@ class _ProgressCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: ChiromoColors.border.withValues(alpha: 0.5)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Detailed view coming soon!')),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -530,6 +537,7 @@ class _ProgressCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

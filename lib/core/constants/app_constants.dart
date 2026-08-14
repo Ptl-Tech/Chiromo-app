@@ -12,6 +12,9 @@ class AppConstants {
   static const String supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pY2d4dmNrd2RwdGloemJ6bXNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5MjU2NTMsImV4cCI6MjA5OTUwMTY1M30.3la1fvzN75MSBvNMPdpVuBev3jho1j_cFUFq48xoEJ4';
 
+  // ── Custom API ─────────────────────────────────────────────────
+  static const String apiBaseUrl = 'http://192.168.100.45:8084';
+
   // ── Branches ──────────────────────────────────────────────────
   static const List<String> branches = [
     'Bustani',

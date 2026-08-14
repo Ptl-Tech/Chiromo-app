@@ -8,12 +8,16 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
+import '../features/auth/presentation/screens/lock_screen.dart';
+import '../features/auth/presentation/screens/security_setup_screen.dart';
+import '../features/auth/presentation/providers/security_provider.dart';
 import '../features/patient/presentation/screens/patient_dashboard_screen.dart';
 import '../features/patient/presentation/screens/book_appointment_screen.dart';
 import '../features/patient/presentation/screens/browse_doctors_screen.dart';
 import '../features/patient/presentation/screens/patient_profile_screen.dart';
 import '../features/patient/presentation/screens/emergency_screen.dart';
 import '../features/patient/presentation/screens/edit_safety_plan_screen.dart';
+import '../features/patient/presentation/screens/edit_emergency_contact_screen.dart';
 import '../features/patient/presentation/screens/patient_records_screen.dart';
 import '../features/patient/presentation/screens/appointment_history_screen.dart';
 import '../features/patient/presentation/screens/cbt_tools_screen.dart';
@@ -55,6 +59,7 @@ Page<dynamic> _fadePage(Widget child) {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
+  final securityState = ref.watch(securityNotifierProvider).valueOrNull;
   final user = authState.valueOrNull;
 
   return GoRouter(
@@ -69,9 +74,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/welcome');
 
       if (!isLoggedIn && !isAuthRoute) return '/welcome';
+      
+      final isLocked = securityState?.isAppLocked ?? false;
+      final isLockRoute = state.matchedLocation == '/lock';
+      
+      if (isLoggedIn) {
+        if (isLocked && !isLockRoute) return '/lock';
+        if (!isLocked && isLockRoute) return _homeForRole(user.role);
+      }
+
       if (isLoggedIn && isAuthRoute) return _homeForRole(user.role);
 
-      if (isLoggedIn && !isAuthRoute) {
+      if (isLoggedIn && !isAuthRoute && !isLockRoute) {
         final allowedPrefix = _allowedPathPrefix(user.role);
         if (!state.matchedLocation.startsWith(allowedPrefix)) {
           return _homeForRole(user.role);
@@ -101,6 +115,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/forgot-password',
         name: 'forgot-password',
         pageBuilder: (_, _) => _fadePage(const ForgotPasswordScreen()),
+      ),
+      GoRoute(
+        path: '/lock',
+        name: 'lock',
+        pageBuilder: (_, _) => _fadePage(const LockScreen()),
+      ),
+      GoRoute(
+        path: '/security-setup',
+        name: 'security-setup',
+        pageBuilder: (_, _) => _fadePage(const SecuritySetupScreen()),
       ),
 
       // ── Authenticated routes (wrapped in AppShell) ────────────
@@ -145,10 +169,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 _fadePage(const EmergencyScreen()),
           ),
           GoRoute(
+            path: '/patient/records',
+            name: 'patient-records',
+            pageBuilder: (_, _) =>
+                _fadePage(const PatientRecordsScreen()),
+          ),
+          GoRoute(
             path: '/patient/emergency/safety-plan',
             name: 'patient-safety-plan',
             pageBuilder: (_, _) =>
                 _fadePage(const EditSafetyPlanScreen()),
+          ),
+          GoRoute(
+            path: '/patient/emergency/contact',
+            name: 'patient-emergency-contact',
+            pageBuilder: (_, state) {
+              final contact = state.extra as dynamic; // Can't easily import EmergencyContactEntity without adding import, let's just pass it or cast to dynamic
+              return _fadePage(EditEmergencyContactScreen(contact: contact));
+            },
           ),
 
           // Doctor
@@ -323,11 +361,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
-      ),
-      GoRoute(
-        path: '/patient/records',
-        name: 'patient-records',
-        builder: (_, _) => const PatientRecordsScreen(),
       ),
     ],
   );

@@ -1,0 +1,38 @@
+﻿[
+    {
+        "id":  "055eb892-a07c-4c32-a724-9a0cae4b4541",
+        "title":  "Kenya Crisis Helpline",
+        "subtitle":  "Befrienders Kenya (24/7 Support)",
+        "phone_number":  "+254722178177",
+        "icon_name":  "phone_in_talk",
+        "color_hex":  "#4A8D8B",
+        "is_active":  true,
+        "sort_order":  1,
+        "created_at":  "2026-07-22T14:21:24.837727+00:00",
+        "updated_at":  "2026-07-22T14:21:24.837727+00:00"
+    },
+    {
+        "id":  "6e9b9c10-a6fe-4fef-a7f5-94525a8845ea",
+        "title":  "Chiromo Hospital Group",
+        "subtitle":  "Toll-Free Emergency Line",
+        "phone_number":  "0800220000",
+        "icon_name":  "local_hospital",
+        "color_hex":  "#D32F2F",
+        "is_active":  true,
+        "sort_order":  2,
+        "created_at":  "2026-07-22T14:21:24.837727+00:00",
+        "updated_at":  "2026-07-22T14:21:24.837727+00:00"
+    },
+    {
+        "id":  "92fbce6d-c209-459f-99c8-342b7dbe6434",
+        "title":  "Chiromo Hospital Group",
+        "subtitle":  "Alternative Emergency Line",
+        "phone_number":  "+254718781404",
+        "icon_name":  "local_hospital",
+        "color_hex":  "#D32F2F",
+        "is_active":  true,
+        "sort_order":  3,
+        "created_at":  "2026-07-22T14:21:24.837727+00:00",
+        "updated_at":  "2026-07-22T14:21:24.837727+00:00"
+    }
+]

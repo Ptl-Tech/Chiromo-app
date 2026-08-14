@@ -53,7 +53,7 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 -- ============================================================================
 
 -- Chats Table
-CREATE TABLE IF NOT EXISTS public.chats (
+CREATE TABLE IF NOT EXISTS public.patient_chats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     patient_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     doctor_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -62,18 +62,18 @@ CREATE TABLE IF NOT EXISTS public.chats (
     UNIQUE(patient_id, doctor_id)
 );
 
-ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.patient_chats ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
     CREATE POLICY "Users can view and manage their chats"
-        ON public.chats FOR ALL
+        ON public.patient_chats FOR ALL
         USING (auth.uid() = patient_id OR auth.uid() = doctor_id);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Messages Table
-CREATE TABLE IF NOT EXISTS public.messages (
+CREATE TABLE IF NOT EXISTS public.patient_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    chat_id UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+    chat_id UUID NOT NULL REFERENCES public.patient_chats(id) ON DELETE CASCADE,
     sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     attachment_url TEXT,
@@ -81,15 +81,15 @@ CREATE TABLE IF NOT EXISTS public.messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.patient_messages ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
     CREATE POLICY "Users can view and manage messages in their chats"
-        ON public.messages FOR ALL
+        ON public.patient_messages FOR ALL
         USING (
             EXISTS (
-                SELECT 1 FROM public.chats c 
-                WHERE c.id = messages.chat_id 
+                SELECT 1 FROM public.patient_chats c 
+                WHERE c.id = patient_messages.chat_id 
                 AND (c.patient_id = auth.uid() OR c.doctor_id = auth.uid())
             )
         );

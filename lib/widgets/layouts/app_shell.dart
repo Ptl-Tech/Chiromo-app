@@ -33,7 +33,7 @@ class AppShell extends ConsumerWidget {
                   ref.read(authNotifierProvider.notifier).signOut(),
             ),
             const VerticalDivider(width: 1),
-            Expanded(child: child),
+            Expanded(child: SafeArea(child: child)),
           ],
         ),
       );
@@ -66,7 +66,7 @@ class AppShell extends ConsumerWidget {
                   .toList(),
             ),
             const VerticalDivider(width: 1),
-            Expanded(child: child),
+            Expanded(child: SafeArea(child: child)),
           ],
         ),
       );
@@ -74,7 +74,7 @@ class AppShell extends ConsumerWidget {
 
     // Mobile
     return Scaffold(
-      body: child,
+      body: SafeArea(child: child),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,

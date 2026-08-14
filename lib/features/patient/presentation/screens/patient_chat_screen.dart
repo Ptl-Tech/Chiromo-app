@@ -71,7 +71,9 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You need an appointment before you can chat with this doctor.'),
+              content: Text(
+                'You need an appointment before you can chat with this doctor.',
+              ),
             ),
           );
         }
@@ -93,9 +95,9 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
       ref.invalidate(patientChatMessagesProvider(widget.doctorId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -187,12 +189,14 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          if (data.isEmpty)
+          if (data.isEmpty || data.length < 2)
             Container(
               height: 160,
               alignment: Alignment.center,
               child: Text(
-                'No recent check-in data to display',
+                data.isEmpty
+                    ? 'No recent check-in data to display'
+                    : 'Not enough data for a trend line',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -203,25 +207,55 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
               height: 160,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: false),
+                  minY: 0,
+                  maxY: 10,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 2.5,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: theme.dividerColor.withValues(alpha: 0.1),
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
+                    ),
+                  ),
                   borderData: FlBorderData(show: false),
                   titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true, reservedSize: 28),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 28,
+                        interval: 5,
+                        getTitlesWidget: (value, meta) => Text(
+                          value.toInt().toString(),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 28,
                         getTitlesWidget: (value, meta) {
-                          const labels = [
-                            '1', '2', '3', '4', '5', '6', '7'
-                          ];
+                          if (value.toInt() < 0 || value.toInt() >= data.length) {
+                            return const SizedBox.shrink();
+                          }
                           return SideTitleWidget(
                             meta: meta,
                             child: Text(
-                              labels[value.toInt().clamp(0, labels.length - 1)],
-                              style: theme.textTheme.bodySmall,
+                              'D${value.toInt() + 1}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.hintColor,
+                                fontSize: 10,
+                              ),
                             ),
                           );
                         },
@@ -234,16 +268,17 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
                           .asMap()
                           .entries
                           .map(
-                            (entry) => FlSpot(entry.key.toDouble(), entry.value),
+                            (entry) =>
+                                FlSpot(entry.key.toDouble(), entry.value),
                           )
                           .toList(),
                       isCurved: true,
-                      barWidth: 3,
+                      barWidth: 4,
                       color: ChiromoColors.primary,
-                      dotData: FlDotData(show: true),
+                      dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: ChiromoColors.primary.withValues(alpha: 0.18),
+                        color: ChiromoColors.primary.withValues(alpha: 0.12),
                       ),
                     ),
                   ],
@@ -265,7 +300,9 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
     final recentProgress = ref.watch(cbtRecentProgressProvider);
     final List<double> chartData = recentProgress.when(
       data: (exercises) {
-        final checkins = exercises.where((e) => e.type == CbtExerciseType.dailyCheckin).toList();
+        final checkins = exercises
+            .where((e) => e.type == CbtExerciseType.dailyCheckin)
+            .toList();
         return checkins.reversed
             .take(7)
             .map((e) => (e.data['mood'] as num?)?.toDouble() ?? 0.0)
@@ -274,7 +311,7 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
             .toList();
       },
       loading: () => [],
-      error: (_, __) => [],
+      error: (_, _) => [],
     );
 
     return AppScaffold(
@@ -284,119 +321,202 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
         child: Column(
           children: [
             _buildHealthTrendCard(context, chartData),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
+                  color: ChiromoColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Expanded(
-                      child: messagesAsync.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (error, _) => Center(
-                          child: Text(
-                            'Unable to load chat: $error',
-                            style: theme.textTheme.bodyMedium,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor.withValues(
+                            alpha: 0.5,
+                          ),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
                           ),
                         ),
-                        data: (messages) {
-                          if (messages.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'No chat history yet. Say hello to ${widget.doctorName}.',
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
+                        child: messagesAsync.when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, _) => Center(
+                            child: Text(
+                              'Unable to load chat: $error',
+                              style: theme.textTheme.bodyMedium,
                             ),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final message = messages[index];
-                              final isDoctor =
-                                  message.senderId !=
-                                  SupabaseService.auth.currentUser?.id;
-                              return Align(
-                                alignment: isDoctor
-                                    ? Alignment.centerLeft
-                                    : Alignment.centerRight,
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isDoctor
-                                        ? ChiromoColors.surfaceVariant
-                                        : ChiromoColors.primary.withValues(
-                                            alpha: 0.12,
-                                          ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    message.content,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: isDoctor
-                                          ? ChiromoColors.textPrimary
-                                          : ChiromoColors.primaryDark,
-                                    ),
+                          ),
+                          data: (messages) {
+                            if (messages.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  'No chat history yet. Say hello to ${widget.doctorName}.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: ChiromoColors.textSecondary,
                                   ),
                                 ),
                               );
-                            },
-                          );
-                        },
+                            }
+
+                            return ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 24,
+                              ),
+                              itemCount: messages.length,
+                              itemBuilder: (context, index) {
+                                final message = messages[index];
+                                final isDoctor =
+                                    message.senderId !=
+                                    SupabaseService.auth.currentUser?.id;
+                                return Align(
+                                  alignment: isDoctor
+                                      ? Alignment.centerLeft
+                                      : Alignment.centerRight,
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                          0.75,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDoctor
+                                          ? ChiromoColors.surfaceVariant
+                                          : ChiromoColors.primary,
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(20),
+                                        topRight: const Radius.circular(20),
+                                        bottomLeft: Radius.circular(
+                                          isDoctor ? 4 : 20,
+                                        ),
+                                        bottomRight: Radius.circular(
+                                          isDoctor ? 20 : 4,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      message.content,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: isDoctor
+                                                ? ChiromoColors.textPrimary
+                                                : ChiromoColors.white,
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.3,
+                                          ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
+                        horizontal: 16,
+                        vertical: 14,
                       ),
                       decoration: BoxDecoration(
                         color: theme.cardColor,
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(24),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                            width: 1,
+                          ),
                         ),
                       ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Expanded(
-                            child: TextField(
-                              controller: _messageController,
-                              textInputAction: TextInputAction.send,
-                              decoration: const InputDecoration.collapsed(
-                                hintText: 'Type a message...',
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: theme.scaffoldBackgroundColor,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: theme.dividerColor.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
                               ),
-                              onSubmitted: (_) => _sendMessage(),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: TextField(
+                                controller: _messageController,
+                                textInputAction: TextInputAction.send,
+                                maxLines: 4,
+                                minLines: 1,
+                                style: theme.textTheme.bodyMedium,
+                                decoration: InputDecoration(
+                                  hintText: 'Type your message...',
+                                  hintStyle: TextStyle(
+                                    color: ChiromoColors.textSecondary
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                ),
+                                onSubmitted: (_) => _sendMessage(),
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: _isSending
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: ChiromoColors.primary,
-                                    ),
-                                  )
-                                : const Icon(Icons.send),
-                            color: ChiromoColors.primary,
-                            onPressed: _isSending ? null : _sendMessage,
+                          const SizedBox(width: 12),
+                          Container(
+                            height: 48,
+                            width: 48,
+                            decoration: BoxDecoration(
+                              color: ChiromoColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ChiromoColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: _isSending
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.send_rounded, size: 20),
+                              color: Colors.white,
+                              onPressed: _isSending ? null : _sendMessage,
+                            ),
                           ),
                         ],
                       ),

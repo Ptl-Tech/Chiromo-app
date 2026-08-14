@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/chiromo_colors.dart';
-import '../../../../widgets/glass_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../appointments/presentation/providers/appointment_providers.dart';
 import 'appointment_detail_screen.dart';
@@ -14,47 +13,57 @@ class AppointmentHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncAppointments = ref.watch(patientAppointmentsProvider);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Appointments'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Upcoming'),
-              Tab(text: 'Past'),
-            ],
-          ),
-        ),
-        body: asyncAppointments.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, st) => Center(child: Text('Error: $e')),
-          data: (appointments) {
-            final now = DateTime.now();
-            final upcoming =
-                appointments.where((a) => a.scheduledAt.isAfter(now)).toList()
-                  ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-            final past =
-                appointments.where((a) => !a.scheduledAt.isAfter(now)).toList()
-                  ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+    return asyncAppointments.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
+      data: (appointments) {
+        final now = DateTime.now();
+        final upcoming =
+            appointments.where((a) => a.scheduledAt.isAfter(now)).toList()
+              ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+        final past =
+            appointments.where((a) => !a.scheduledAt.isAfter(now)).toList()
+              ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
 
-            return TabBarView(
-              children: [_buildList(upcoming, context), _buildList(past, context)],
-            );
-          },
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => context.push('/patient/book'),
-          icon: const Icon(Icons.add),
-          label: const Text('Book Appointment'),
-          backgroundColor: ChiromoColors.primary,
-          foregroundColor: Colors.white,
-        ),
-      ),
+        final initialIndex = upcoming.isEmpty && past.isNotEmpty ? 1 : 0;
+
+        return DefaultTabController(
+          length: 2,
+          initialIndex: initialIndex,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Appointments'),
+              bottom: const TabBar(
+                tabs: [
+                  Tab(text: 'Upcoming'),
+                  Tab(text: 'Past'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                _buildList(upcoming, context),
+                _buildList(past, context),
+              ],
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () => context.push('/patient/book'),
+              icon: const Icon(Icons.add),
+              label: const Text('Book Appointment'),
+              backgroundColor: ChiromoColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildList(List<AppointmentEntity> appointments, BuildContext context) {
+  Widget _buildList(
+    List<AppointmentEntity> appointments,
+    BuildContext context,
+  ) {
     if (appointments.isEmpty) {
       return const Center(child: Text('No appointments found.'));
     }
@@ -128,9 +137,7 @@ class AppointmentHistoryScreen extends ConsumerWidget {
             offset: const Offset(0, 5),
           ),
         ],
-        border: Border.all(
-          color: ChiromoColors.primary.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: ChiromoColors.primary.withValues(alpha: 0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -169,7 +176,10 @@ class AppointmentHistoryScreen extends ConsumerWidget {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -245,9 +255,14 @@ class AppointmentHistoryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: ChiromoColors.surfaceVariant.withValues(alpha: 0.5),
+                      color: ChiromoColors.surfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -286,7 +301,11 @@ class AppointmentHistoryScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Container(width: 1, height: 32, color: Colors.grey.withValues(alpha: 0.3)),
+                        Container(
+                          width: 1,
+                          height: 32,
+                          color: Colors.grey.withValues(alpha: 0.3),
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -304,8 +323,11 @@ class AppointmentHistoryScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Icon(
-                                    type.toLowerCase().contains('person') || type.toLowerCase().contains('physical')
-                                        ? Icons.local_hospital_rounded 
+                                    type.toLowerCase().contains('person') ||
+                                            type.toLowerCase().contains(
+                                              'physical',
+                                            )
+                                        ? Icons.local_hospital_rounded
                                         : Icons.videocam_rounded,
                                     size: 16,
                                     color: ChiromoColors.primary,
@@ -313,9 +335,12 @@ class AppointmentHistoryScreen extends ConsumerWidget {
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      type.toUpperCase() == 'VIDEO' || type.toLowerCase().contains('online') 
-                                        ? 'Video Call' 
-                                        : 'In-Person',
+                                      type.toUpperCase() == 'VIDEO' ||
+                                              type.toLowerCase().contains(
+                                                'online',
+                                              )
+                                          ? 'Video Call'
+                                          : 'In-Person',
                                       style: const TextStyle(
                                         color: ChiromoColors.textPrimary,
                                         fontWeight: FontWeight.w700,

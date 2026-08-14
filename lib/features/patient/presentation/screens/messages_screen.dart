@@ -51,7 +51,7 @@ class MessagesScreen extends ConsumerWidget {
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.history_edu_outlined),
                           label: const Text('Session Notes'),
-                          onPressed: () => context.go('/patient/history'),
+                          onPressed: () => context.go('/patient/records'),
                         ),
                       ),
                     ],
@@ -98,7 +98,7 @@ class MessagesScreen extends ConsumerWidget {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () => context.go('/patient/history'),
+                          onPressed: () => context.go('/patient/records'),
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),

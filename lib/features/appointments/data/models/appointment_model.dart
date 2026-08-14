@@ -13,6 +13,7 @@ class AppointmentModel {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isRated;
   final UserModel? patient;
   final DoctorModel? doctor;
 
@@ -27,6 +28,7 @@ class AppointmentModel {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.isRated = false,
     this.patient,
     this.doctor,
   });
@@ -43,6 +45,7 @@ class AppointmentModel {
       notes: json['notes'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      isRated: _hasReviews(json['doctor_reviews']),
       patient: json['patient'] != null
           ? UserModel.fromJson(json['patient'])
           : null,
@@ -50,6 +53,13 @@ class AppointmentModel {
           ? DoctorModel.fromJson(json['doctor'])
           : null,
     );
+  }
+
+  static bool _hasReviews(dynamic reviewsData) {
+    if (reviewsData == null) return false;
+    if (reviewsData is List) return reviewsData.isNotEmpty;
+    if (reviewsData is Map) return true; // Single object means a review exists
+    return false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -74,6 +84,7 @@ class AppointmentModel {
     notes: notes,
     createdAt: createdAt,
     updatedAt: updatedAt,
+    isRated: isRated,
     patient: patient?.toEntity(),
     doctor: doctor?.toEntity(),
   );

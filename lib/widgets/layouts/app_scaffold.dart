@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/chiromo_colors.dart';
 
 /// A reusable Scaffold that provides a consistent AppBar with a back button.
@@ -30,7 +31,19 @@ class AppScaffold extends ConsumerWidget {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              leading: showBack ? const BackButton() : null,
+              leading: showBack
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          // Fallback to home if stuck
+                          context.go('/patient');
+                        }
+                      },
+                    )
+                  : null,
               title: Text(
                 title,
                 style: const TextStyle(color: ChiromoColors.textPrimary),
@@ -42,7 +55,7 @@ class AppScaffold extends ConsumerWidget {
             )
           : null,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: body,
+      body: SafeArea(child: body),
       floatingActionButton: floatingActionButton,
     );
   }

@@ -8,26 +8,26 @@ import 'package:flutter/material.dart';
 class ChiromoColors {
   ChiromoColors._();
 
-  // ── Primary – Vibrant Emerald & Teal ──────────────────────────
-  static const Color primaryDarkest = Color(0xFF003D33);
-  static const Color primaryDark = Color(0xFF00796B);
-  static const Color primary = Color(0xFF00C896); // Shiny Emerald Green
-  static const Color primaryLight = Color(0xFF52DE97); // Neon Mint
-  static const Color primaryLighter = Color(0xFFB9F6CA);
-  static const Color primarySurface = Color(0xFFE8FDF5);
+  // ── Primary – Chiromo Deep Blue ──────────────────────────
+  static const Color primaryDarkest = Color(0xFF003359);
+  static const Color primaryDark = Color(0xFF00497C);
+  static const Color primary = Color(0xFF0060A2); // Chiromo Brand Blue
+  static const Color primaryLight = Color(0xFF3380B5); 
+  static const Color primaryLighter = Color(0xFF99BFE1);
+  static const Color primarySurface = Color(0xFFE5EFF6);
 
-  // ── Secondary – Vibrant Gold/Amber ────────────────────────────
-  static const Color gold = Color(0xFFFFC107); // Shiny Gold
-  static const Color goldLight = Color(0xFFFFD54F);
-  static const Color goldDark = Color(0xFFFF8F00);
-  static const Color goldSurface = Color(0xFFFFF8E1);
+  // ── Secondary – Light Blue & Cyan ────────────────────────────
+  static const Color gold = Color(0xFF1AAFFF); // Cyan/Light Blue from website
+  static const Color goldLight = Color(0xFF66CFFF);
+  static const Color goldDark = Color(0xFF008CCC);
+  static const Color goldSurface = Color(0xFFE6F7FF);
 
-  // ── Accent – Electric Pink/Crimson ────────────────────────────
-  static const Color crimson = Color(0xFFFF4081); // Electric Pink
-  static const Color crimsonLight = Color(0xFFFF80AB);
-  static const Color accent = Color(0xFFFF4081);
-  static const Color accentLight = Color(0xFFFF80AB);
-  static const Color crimsonSurface = Color(0xFFFCE4EC);
+  // ── Accent – Red/Crimson ────────────────────────────
+  static const Color crimson = Color(0xFFE53935); // Red Accent
+  static const Color crimsonLight = Color(0xFFEF9A9A);
+  static const Color accent = Color(0xFFE53935);
+  static const Color accentLight = Color(0xFFEF9A9A);
+  static const Color crimsonSurface = Color(0xFFFFEBEE);
 
   // ── Semantic ──────────────────────────────────────────────────
   static const Color success = Color(0xFF00E676);
@@ -73,19 +73,19 @@ class ChiromoColors {
   );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [primaryDark, primary, primaryLight],
+    colors: [primaryLight, primary, primaryDarkest],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient cardGradientBlue = LinearGradient(
-    colors: [Color(0xFF00E5FF), Color(0xFF00B0FF)],
+    colors: [Color(0xFF66CFFF), Color(0xFF1AAFFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient cardGradientGold = LinearGradient(
-    colors: [Color(0xFFFFD54F), Color(0xFFFF9100)],
+    colors: [Color(0xFF99BFE1), Color(0xFF3380B5)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

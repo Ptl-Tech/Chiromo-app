@@ -1,0 +1,183 @@
+﻿{
+    "total_rows":  14,
+    "tables_exported":  29,
+    "supabase_url":  "https://micgxvckwdptihzbzmsr.supabase.co",
+    "exported_at":  "2026-08-07_16-26-20",
+    "tables":  [
+                   {
+                       "Table":  "profiles",
+                       "Rows":  2,
+                       "Status":  "OK",
+                       "File":  "profiles.json"
+                   },
+                   {
+                       "Table":  "branches",
+                       "Rows":  6,
+                       "Status":  "OK",
+                       "File":  "branches.json"
+                   },
+                   {
+                       "Table":  "doctors",
+                       "Rows":  1,
+                       "Status":  "OK",
+                       "File":  "doctors.json"
+                   },
+                   {
+                       "Table":  "appointments",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "appointments.json"
+                   },
+                   {
+                       "Table":  "queues",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "queues.json"
+                   },
+                   {
+                       "Table":  "invoices",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "invoices.json"
+                   },
+                   {
+                       "Table":  "cbt_exercises",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "cbt_exercises.json"
+                   },
+                   {
+                       "Table":  "health_metrics",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "health_metrics.json"
+                   },
+                   {
+                       "Table":  "departments",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "departments.json"
+                   },
+                   {
+                       "Table":  "services",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "services.json"
+                   },
+                   {
+                       "Table":  "rooms",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "rooms.json"
+                   },
+                   {
+                       "Table":  "doctor_schedules",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "doctor_schedules.json"
+                   },
+                   {
+                       "Table":  "time_slots",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "time_slots.json"
+                   },
+                   {
+                       "Table":  "medical_records",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "medical_records.json"
+                   },
+                   {
+                       "Table":  "diagnoses",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "diagnoses.json"
+                   },
+                   {
+                       "Table":  "prescriptions",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "prescriptions.json"
+                   },
+                   {
+                       "Table":  "insurance_providers",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "insurance_providers.json"
+                   },
+                   {
+                       "Table":  "corporate_accounts",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "corporate_accounts.json"
+                   },
+                   {
+                       "Table":  "insurance_claims",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "insurance_claims.json"
+                   },
+                   {
+                       "Table":  "payments",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "payments.json"
+                   },
+                   {
+                       "Table":  "notifications",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "notifications.json"
+                   },
+                   {
+                       "Table":  "audit_logs",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "audit_logs.json"
+                   },
+                   {
+                       "Table":  "chat_messages",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "chat_messages.json"
+                   },
+                   {
+                       "Table":  "emergency_contacts",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "emergency_contacts.json"
+                   },
+                   {
+                       "Table":  "safety_plans",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "safety_plans.json"
+                   },
+                   {
+                       "Table":  "emergency_hotlines",
+                       "Rows":  3,
+                       "Status":  "OK",
+                       "File":  "emergency_hotlines.json"
+                   },
+                   {
+                       "Table":  "patient_chats",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "patient_chats.json"
+                   },
+                   {
+                       "Table":  "patient_messages",
+                       "Rows":  0,
+                       "Status":  "OK",
+                       "File":  "patient_messages.json"
+                   },
+                   {
+                       "Table":  "doctor_reviews",
+                       "Rows":  2,
+                       "Status":  "OK",
+                       "File":  "doctor_reviews.json"
+                   }
+               ],
+    "tables_failed":  0
+}

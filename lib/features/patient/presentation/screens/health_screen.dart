@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../theme/chiromo_colors.dart';
 import '../../../../widgets/layouts/app_scaffold.dart';
 import 'package:chiromo/widgets/glass_card.dart';
@@ -36,7 +37,9 @@ class HealthScreen extends ConsumerWidget {
                   return Wrap(
                     spacing: 20,
                     runSpacing: 20,
-                    children: metrics.map((m) => _MetricCard(metric: m)).toList(),
+                    children: metrics
+                        .map((m) => _MetricCard(metric: m))
+                        .toList(),
                   );
                 },
               ),
@@ -56,97 +59,104 @@ class HealthScreen extends ConsumerWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: ref.watch(patientAppointmentsProvider).when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (err, st) => Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('Failed to load your doctors: $err'),
-              ),
-              data: (appointments) {
-                // Extract unique doctors
-                final doctorsMap = <String, dynamic>{};
-                for (final appt in appointments) {
-                  if (appt.doctor != null) {
-                    doctorsMap[appt.doctor!.id] = appt.doctor;
-                  }
-                }
-                
-                final doctors = doctorsMap.values.toList();
-                
-                if (doctors.isEmpty) {
-                  return const Padding(
+            child: ref
+                .watch(patientAppointmentsProvider)
+                .when(
+                  loading: () => const Padding(
                     padding: EdgeInsets.all(20),
-                    child: Text(
-                      'You haven\'t interacted with any doctors yet.',
-                      style: TextStyle(color: ChiromoColors.textSecondary),
-                    ),
-                  );
-                }
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (err, st) => Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text('Failed to load your doctors: $err'),
+                  ),
+                  data: (appointments) {
+                    // Extract unique doctors
+                    final doctorsMap = <String, dynamic>{};
+                    for (final appt in appointments) {
+                      if (appt.doctor != null) {
+                        doctorsMap[appt.doctor!.id] = appt.doctor;
+                      }
+                    }
 
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  itemCount: doctors.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final doc = doctors[index];
-                    final name = doc.userProfile?.fullName ?? 'Unknown Doctor';
-                    final specialty = doc.specialty;
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: ChiromoColors.border,
+                    final doctors = doctorsMap.values.toList();
+
+                    if (doctors.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          'You haven\'t interacted with any doctors yet.',
+                          style: TextStyle(color: ChiromoColors.textSecondary),
                         ),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(12),
-                        leading: CircleAvatar(
-                          radius: 24,
-                          backgroundColor: ChiromoColors.primarySurface,
-                          backgroundImage: doc.userProfile?.avatarUrl != null
-                              ? NetworkImage(doc.userProfile!.avatarUrl!)
-                              : null,
-                          child: doc.userProfile?.avatarUrl == null
-                              ? Text(
-                                  name.substring(0, 1),
-                                  style: const TextStyle(
-                                    color: ChiromoColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        title: Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                      );
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      itemCount: doctors.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final doc = doctors[index];
+                        final name =
+                            doc.userProfile?.fullName ?? 'Unknown Doctor';
+                        final specialty = doc.specialty;
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: ChiromoColors.border),
                           ),
-                        ),
-                        subtitle: Text(
-                          specialty,
-                          style: const TextStyle(
-                            color: ChiromoColors.primary,
-                            fontSize: 13,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(12),
+                            leading: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: ChiromoColors.primarySurface,
+                              backgroundImage:
+                                  doc.userProfile?.avatarUrl != null
+                                  ? NetworkImage(doc.userProfile!.avatarUrl!)
+                                  : null,
+                              child: doc.userProfile?.avatarUrl == null
+                                  ? Text(
+                                      name.substring(0, 1),
+                                      style: const TextStyle(
+                                        color: ChiromoColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            title: Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              specialty,
+                              style: const TextStyle(
+                                color: ChiromoColors.primary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.chat_bubble_outline,
+                                color: ChiromoColors.primary,
+                              ),
+                              onPressed: () {
+                                context.push(
+                                  '/patient/messages/chat/${doc.id}?doctorName=${Uri.encodeComponent(name)}&specialty=${Uri.encodeComponent(specialty)}',
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.chat_bubble_outline, color: ChiromoColors.primary),
-                          onPressed: () {
-                            // Navigate to chat if needed
-                          },
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
           ),
         ],
       ),

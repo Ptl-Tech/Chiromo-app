@@ -13,6 +13,7 @@ class AppointmentEntity {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isRated;
 
   // Optional relations
   final UserEntity? patient;
@@ -29,6 +30,7 @@ class AppointmentEntity {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.isRated = false,
     this.patient,
     this.doctor,
   });

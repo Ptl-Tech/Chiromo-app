@@ -10,7 +10,7 @@ class AppointmentRemoteDataSource {
     final response = await _client
         .from('appointments')
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .eq('patient_id', patientId)
         .order('scheduled_at', ascending: true);
@@ -26,7 +26,7 @@ class AppointmentRemoteDataSource {
     final response = await _client
         .from('appointments')
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .eq('doctor_id', doctorId)
         .order('scheduled_at', ascending: true);
@@ -46,7 +46,7 @@ class AppointmentRemoteDataSource {
     final response = await _client
         .from('appointments')
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .eq('doctor_id', doctorId)
         .gte('scheduled_at', startOfDay)
@@ -80,7 +80,7 @@ class AppointmentRemoteDataSource {
         .from('appointments')
         .insert(data)
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .single();
 
@@ -96,7 +96,7 @@ class AppointmentRemoteDataSource {
         .update({'status': status})
         .eq('id', appointmentId)
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .single();
 
@@ -126,7 +126,7 @@ class AppointmentRemoteDataSource {
         .update(data)
         .eq('id', appointmentId)
         .select(
-          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*)',
+          '*, doctor:doctors(*, profiles(*)), patient:profiles!appointments_patient_id_fkey(*), doctor_reviews(*)',
         )
         .single();
 

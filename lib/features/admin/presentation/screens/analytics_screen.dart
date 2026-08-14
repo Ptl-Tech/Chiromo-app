@@ -23,9 +23,9 @@ class AnalyticsScreen extends ConsumerWidget {
           padding: EdgeInsets.all(24),
           child: Column(
             children: [
-              ShimmerCard(height: 300),
-              SizedBox(height: 32),
-              ShimmerCard(height: 300),
+              ShimmerCard(height: 320),
+              SizedBox(height: 40),
+              ShimmerCard(height: 320),
             ],
           ),
         ),
@@ -42,92 +42,142 @@ class AnalyticsScreen extends ConsumerWidget {
               .toList();
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Revenue chart
-                SizedBox(
-                  height: 300,
-                  child: Card(
-                    elevation: 8,
-                    shadowColor: ChiromoColors.primary.withValues(alpha: 0.15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SfCartesianChart(
-                        primaryXAxis: const CategoryAxis(),
-                        primaryYAxis: const NumericAxis(
-                          numberFormat: null,
-                          labelFormat: 'KES {value}',
-                        ),
-                        tooltipBehavior: TooltipBehavior(enable: true),
-                        series: <CartesianSeries>[
-                          SplineAreaSeries<ChartData, String>(
-                            dataSource: revenueData,
-                            xValueMapper: (ChartData data, _) => data.category,
-                            yValueMapper: (ChartData data, _) => data.value,
-                            gradient: LinearGradient(
-                              colors: [
-                                ChiromoColors.primary.withValues(alpha: 0.5),
-                                ChiromoColors.primaryLight.withValues(alpha: 0.1),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                            borderColor: ChiromoColors.primary,
-                            borderWidth: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Appointments by Department',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Appointments chart
-                SizedBox(
-                  height: 300,
-                  child: Card(
-                    elevation: 8,
-                    shadowColor: ChiromoColors.gold.withValues(alpha: 0.15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SfCircularChart(
-                        legend: const Legend(
-                          isVisible: true,
-                          position: LegendPosition.right,
-                        ),
-                        tooltipBehavior: TooltipBehavior(enable: true),
-                        series: <CircularSeries>[
-                          DoughnutSeries<ChartData, String>(
-                            dataSource: appointmentData,
-                            xValueMapper: (ChartData data, _) => data.category,
-                            yValueMapper: (ChartData data, _) => data.value,
-                            dataLabelSettings: const DataLabelSettings(
-                              isVisible: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildSectionHeader('Revenue Analytics', 'Monthly income overview in KES'),
+                const SizedBox(height: 20),
+                _buildRevenueChart(context, revenueData),
+                const SizedBox(height: 40),
+                _buildSectionHeader('Department Performance', 'Distribution of appointments'),
+                const SizedBox(height: 20),
+                _buildDepartmentChart(context, appointmentData),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: const TextStyle(fontSize: 14, color: ChiromoColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRevenueChart(BuildContext context, List<ChartData> data) {
+    return Container(
+      height: 320,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: ChiromoColors.primary.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: SfCartesianChart(
+        plotAreaBorderWidth: 0,
+        primaryXAxis: const CategoryAxis(
+          majorGridLines: MajorGridLines(width: 0),
+          axisLine: AxisLine(width: 0),
+        ),
+        primaryYAxis: const NumericAxis(
+          numberFormat: null,
+          labelFormat: '{value}k',
+          axisLine: AxisLine(width: 0),
+          majorTickLines: MajorTickLines(size: 0),
+          majorGridLines: MajorGridLines(
+            width: 1,
+            color: Color(0x1A000000), // very light gray
+            dashArray: <double>[5, 5],
+          ),
+        ),
+        tooltipBehavior: TooltipBehavior(
+          enable: true,
+          color: Colors.white,
+          textStyle: const TextStyle(color: ChiromoColors.primary, fontWeight: FontWeight.bold),
+          elevation: 10,
+        ),
+        series: <CartesianSeries>[
+          SplineAreaSeries<ChartData, String>(
+            dataSource: data,
+            xValueMapper: (ChartData data, _) => data.category,
+            yValueMapper: (ChartData data, _) => data.value,
+            gradient: LinearGradient(
+              colors: [
+                ChiromoColors.primary.withValues(alpha: 0.5),
+                ChiromoColors.primaryLight.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderColor: ChiromoColors.primary,
+            borderWidth: 3,
+            markerSettings: const MarkerSettings(isVisible: true, color: Colors.white, borderColor: ChiromoColors.primary),
+            animationDuration: 1500,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDepartmentChart(BuildContext context, List<ChartData> data) {
+    return Container(
+      height: 320,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: ChiromoColors.gold.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: SfCircularChart(
+        legend: const Legend(
+          isVisible: true,
+          position: LegendPosition.right,
+          overflowMode: LegendItemOverflowMode.wrap,
+          textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        ),
+        tooltipBehavior: TooltipBehavior(enable: true, elevation: 10),
+        series: <CircularSeries>[
+          DoughnutSeries<ChartData, String>(
+            dataSource: data,
+            xValueMapper: (ChartData data, _) => data.category,
+            yValueMapper: (ChartData data, _) => data.value,
+            dataLabelSettings: const DataLabelSettings(
+              isVisible: true,
+              labelPosition: ChartDataLabelPosition.outside,
+              textStyle: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            innerRadius: '65%',
+            animationDuration: 1500,
+            explode: true,
+            explodeIndex: 0,
+          ),
+        ],
       ),
     );
   }

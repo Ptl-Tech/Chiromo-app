@@ -21,13 +21,15 @@ class PatientDashboardScreen extends ConsumerWidget {
     final user = ref.watch(authNotifierProvider).valueOrNull;
     final theme = Theme.of(context);
     final recentProgress = ref.watch(cbtRecentProgressProvider);
-    
+
     String dayStreak = '-';
     String avgMood = '-';
     final bool hasSubmittedMoodToday = recentProgress.when(
       data: (exercises) {
         final checkins = exercises
-            .where((e) => e.type == CbtExerciseType.dailyCheckin && e.mood != null)
+            .where(
+              (e) => e.type == CbtExerciseType.dailyCheckin && e.mood != null,
+            )
             .toList();
         if (checkins.isNotEmpty) {
           // Compute stats
@@ -38,14 +40,12 @@ class PatientDashboardScreen extends ConsumerWidget {
           checkins.sort((a, b) => a.createdAt.compareTo(b.createdAt));
           final lastCheckin = checkins.last;
           final now = DateTime.now();
-          return lastCheckin.createdAt.year == now.year &&
-              lastCheckin.createdAt.month == now.month &&
-              lastCheckin.createdAt.day == now.day;
+          return now.difference(lastCheckin.createdAt).inHours < 6;
         }
         return false;
       },
       loading: () => false,
-      error: (_, __) => false,
+      error: (_, _) => false,
     );
 
     return AppScaffold(
@@ -112,7 +112,9 @@ class PatientDashboardScreen extends ConsumerWidget {
                   ),
                   Builder(
                     builder: (context) {
-                      final unreadCount = ref.watch(unreadNotificationCountProvider);
+                      final unreadCount = ref.watch(
+                        unreadNotificationCountProvider,
+                      );
                       return GestureDetector(
                         onTap: () => context.push('/patient/notifications'),
                         child: Stack(
@@ -179,183 +181,236 @@ class PatientDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!hasSubmittedMoodToday) ...[
-              // Mood selector card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                      // Mood selector card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'How are you feeling today?',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Start your day with a moment of awareness.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.hintColor,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              alignment: WrapAlignment.spaceEvenly,
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                MoodButton(
+                                  label: 'Awful',
+                                  imageUrl:
+                                      'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png',
+                                  onTap: () =>
+                                      _saveMood(context, ref, 2, user?.id),
+                                ),
+                                MoodButton(
+                                  label: 'Bad',
+                                  imageUrl:
+                                      'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png',
+                                  onTap: () =>
+                                      _saveMood(context, ref, 4, user?.id),
+                                ),
+                                MoodButton(
+                                  label: 'Okay',
+                                  imageUrl:
+                                      'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png',
+                                  onTap: () =>
+                                      _saveMood(context, ref, 6, user?.id),
+                                ),
+                                MoodButton(
+                                  label: 'Good',
+                                  imageUrl:
+                                      'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png',
+                                  onTap: () =>
+                                      _saveMood(context, ref, 8, user?.id),
+                                ),
+                                MoodButton(
+                                  label: 'Great',
+                                  imageUrl:
+                                      'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png',
+                                  onTap: () =>
+                                      _saveMood(context, ref, 10, user?.id),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // Quick actions grid
                     Text(
-                      'How are you feeling today?',
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      'Quick Actions',
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 12),
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 1.1,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        QuickActionCard(
+                          icon: Icons.calendar_month,
+                          title: 'Book Appointment',
+                          subtitle: 'Schedule a session',
+                          imagePath:
+                              'assets/images/quick_actions/find_doctor.png',
+                          onTap: () => context.push('/patient/book'),
+                        ),
+                        QuickActionCard(
+                          icon: Icons.edit,
+                          title: 'Record a thought',
+                          subtitle: 'Challenge a negative thought',
+                          imagePath:
+                              'assets/images/quick_actions/record_thought.png',
+                          onTap: () =>
+                              context.push('/patient/cbt/thought-record'),
+                        ),
+                        QuickActionCard(
+                          icon: Icons.directions_walk,
+                          title: 'Log Activity',
+                          subtitle: 'Track your behavior activation',
+                          imagePath:
+                              'assets/images/quick_actions/log_activity.png',
+                          onTap: () => context.push(
+                            '/patient/cbt/behavioral-activation',
+                          ),
+                        ),
+                        QuickActionCard(
+                          icon: Icons.bar_chart,
+                          title: "CBT Tools",
+                          subtitle: 'View your progress',
+                          imagePath:
+                              'assets/images/quick_actions/cbt_tools.png',
+                          onTap: () => context.push('/patient/cbt'),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Appointment / Session tabs
+                    const AppointmentTabs(),
+
+                    const SizedBox(height: 18),
+
+                    // Progress summary (simple visual placeholders)
                     Text(
-                      'Start your day with a moment of awareness.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
+                      'Your Progress',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.spaceEvenly,
-                      spacing: 12,
-                      runSpacing: 12,
+                    Row(
                       children: [
-                        MoodButton(label: 'Awful', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png', onTap: () => _saveMood(context, ref, 2, user?.id)),
-                        MoodButton(label: 'Bad', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png', onTap: () => _saveMood(context, ref, 4, user?.id)),
-                        MoodButton(label: 'Okay', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png', onTap: () => _saveMood(context, ref, 6, user?.id)),
-                        MoodButton(label: 'Good', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png', onTap: () => _saveMood(context, ref, 8, user?.id)),
-                        MoodButton(label: 'Great', imageUrl: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png', onTap: () => _saveMood(context, ref, 10, user?.id)),
+                        SmallStat(title: dayStreak, subtitle: 'check-ins'),
+                        const SizedBox(width: 12),
+                        SmallStat(title: avgMood, subtitle: 'Avg Mood'),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-            ],
-
-            // Quick actions grid
-            Text(
-              'Quick Actions',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.1,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                QuickActionCard(
-                  icon: Icons.calendar_month,
-                  title: 'Book Appointment',
-                  subtitle: 'Schedule a session',
-                  imagePath: 'assets/images/quick_actions/find_doctor.png',
-                  onTap: () => context.push('/patient/book'),
-                ),
-                QuickActionCard(
-                  icon: Icons.edit,
-                  title: 'Record a thought',
-                  subtitle: 'Challenge a negative thought',
-                  imagePath: 'assets/images/quick_actions/record_thought.png',
-                  onTap: () => context.push('/patient/cbt/thought-record'),
-                ),
-                QuickActionCard(
-                  icon: Icons.directions_walk,
-                  title: 'Log Activity',
-                  subtitle: 'Track your behavior activation',
-                  imagePath: 'assets/images/quick_actions/log_activity.png',
-                  onTap: () => context.push('/patient/cbt/behavioral-activation'),
-                ),
-                QuickActionCard(
-                  icon: Icons.bar_chart,
-                  title: "CBT Tools",
-                  subtitle: 'View your progress',
-                  imagePath: 'assets/images/quick_actions/cbt_tools.png',
-                  onTap: () => context.push('/patient/cbt'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 18),
-
-            // Appointment / Session tabs
-            const AppointmentTabs(),
-
-            const SizedBox(height: 18),
-
-            // Progress summary (simple visual placeholders)
-            Text(
-              'Your Progress',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                SmallStat(title: dayStreak, subtitle: 'check-ins'),
-                const SizedBox(width: 12),
-                SmallStat(title: avgMood, subtitle: 'Avg Mood'),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Mood chart wired to recent CBT daily check-ins
-            ref
-                .watch(cbtRecentProgressProvider)
-                .when(
-                  loading: () => const ShimmerCard(height: 140),
-                  error: (e, st) => ErrorRetryWidget(
-                    message: 'Failed to load mood chart',
-                    onRetry: () => ref.invalidate(cbtRecentProgressProvider),
-                  ),
-                  data: (exercises) {
-                    final checkins =
-                        exercises
-                            .where(
-                              (e) =>
-                                  e.type == CbtExerciseType.dailyCheckin &&
-                                  (e.mood != null),
-                            )
-                            .toList()
-                          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-                    if (checkins.isEmpty) {
-                      return Container(
-                        height: 140,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                    const SizedBox(height: 12),
+                    // Mood chart wired to recent CBT daily check-ins
+                    ref
+                        .watch(cbtRecentProgressProvider)
+                        .when(
+                          loading: () => const ShimmerCard(height: 140),
+                          error: (e, st) => ErrorRetryWidget(
+                            message: 'Failed to load mood chart',
+                            onRetry: () =>
+                                ref.invalidate(cbtRecentProgressProvider),
                           ),
-                        ),
-                        child: Text(
-                          'No mood data yet.\nCheck-in to start tracking!',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).hintColor,
-                          ),
-                        ),
-                      );
-                    }
+                          data: (exercises) {
+                            final checkins =
+                                exercises
+                                    .where(
+                                      (e) =>
+                                          e.type ==
+                                              CbtExerciseType.dailyCheckin &&
+                                          (e.mood != null),
+                                    )
+                                    .toList()
+                                  ..sort(
+                                    (a, b) =>
+                                        a.createdAt.compareTo(b.createdAt),
+                                  );
 
-                    // take last 7 values
-                    final recentCheckins = checkins.reversed.take(7).toList().reversed.toList();
-                    final chartData = recentCheckins.map((e) => _ChartDataPoint(
-                      date: e.createdAt,
-                      mood: (e.mood ?? 0).clamp(0, 10).toInt(),
-                    )).toList();
+                            if (checkins.isEmpty) {
+                              return Container(
+                                height: 140,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).dividerColor.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                                child: Text(
+                                  'No mood data yet.\nCheck-in to start tracking!',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context).hintColor,
+                                      ),
+                                ),
+                              );
+                            }
 
-                    return Column(
-                      children: [
-                        _MoodChart(data: chartData),
-                        const SizedBox(height: 16),
-                        _MoodInsightsCard(data: chartData),
-                      ],
-                    );
-                  },
-                ),
-            const SizedBox(height: 24),
+                            // take last 7 values
+                            final recentCheckins = checkins.reversed
+                                .take(7)
+                                .toList()
+                                .reversed
+                                .toList();
+                            final chartData = recentCheckins
+                                .map(
+                                  (e) => _ChartDataPoint(
+                                    date: e.createdAt,
+                                    mood: (e.mood ?? 0).clamp(0, 10).toInt(),
+                                  ),
+                                )
+                                .toList();
+
+                            return Column(
+                              children: [
+                                _MoodChart(data: chartData),
+                                const SizedBox(height: 16),
+                                _MoodInsightsCard(data: chartData),
+                              ],
+                            );
+                          },
+                        ),
+                    const SizedBox(height: 24),
                   ],
                 ), // Column
               ), // SingleChildScrollView
@@ -366,11 +421,18 @@ class PatientDashboardScreen extends ConsumerWidget {
     ); // AppScaffold
   }
 
-  void _saveMood(BuildContext context, WidgetRef ref, int score, String? patientId) async {
+  void _saveMood(
+    BuildContext context,
+    WidgetRef ref,
+    int score,
+    String? patientId,
+  ) async {
     if (patientId == null) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(cbtRepositoryProvider).createExercise(
+      await ref
+          .read(cbtRepositoryProvider)
+          .createExercise(
             CbtExerciseEntity(
               id: '',
               patientId: patientId,
@@ -394,10 +456,6 @@ class PatientDashboardScreen extends ConsumerWidget {
   }
 }
 
-
-
-
-
 class _ChartDataPoint {
   final DateTime date;
   final int mood;
@@ -411,7 +469,7 @@ class _MoodChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     List<FlSpot> spots = [];
     for (int i = 0; i < data.length; i++) {
       spots.add(FlSpot(i.toDouble(), data[i].mood.toDouble()));
@@ -445,9 +503,7 @@ class _MoodChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -468,7 +524,11 @@ class _MoodChart extends StatelessWidget {
                   color: ChiromoColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.insights_rounded, size: 20, color: ChiromoColors.primary),
+                child: const Icon(
+                  Icons.insights_rounded,
+                  size: 20,
+                  color: ChiromoColors.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -495,7 +555,10 @@ class _MoodChart extends StatelessWidget {
               ),
               // Avg Mood badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _moodColor(avgMood).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -507,7 +570,8 @@ class _MoodChart extends StatelessWidget {
                       _moodEmojiUrl(avgMood),
                       width: 18,
                       height: 18,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 18),
+                      errorBuilder: (_, _, _) =>
+                          const Icon(Icons.mood, size: 18),
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -578,8 +642,12 @@ class _MoodChart extends StatelessWidget {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -587,9 +655,19 @@ class _MoodChart extends StatelessWidget {
                       interval: 1,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= data.length) return const SizedBox();
+                        if (idx < 0 || idx >= data.length) {
+                          return const SizedBox();
+                        }
                         final date = data[idx].date;
-                        final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        final days = [
+                          'Mon',
+                          'Tue',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun',
+                        ];
                         final text = days[date.weekday - 1];
                         return SideTitleWidget(
                           meta: meta,
@@ -614,11 +692,14 @@ class _MoodChart extends StatelessWidget {
                         final v = value.toInt();
                         String url;
                         if (v == 0) {
-                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
+                          url =
+                              'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
                         } else if (v == 5) {
-                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
+                          url =
+                              'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
                         } else if (v == 10) {
-                          url = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png';
+                          url =
+                              'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png';
                         } else {
                           return const SizedBox();
                         }
@@ -629,7 +710,8 @@ class _MoodChart extends StatelessWidget {
                             url,
                             width: 16,
                             height: 16,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 16),
+                            errorBuilder: (_, _, _) =>
+                                const Icon(Icons.mood, size: 16),
                           ),
                         );
                       },
@@ -648,7 +730,11 @@ class _MoodChart extends StatelessWidget {
                     isCurved: true,
                     curveSmoothness: 0.35,
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF42A5F5), ChiromoColors.primary, Color(0xFF66BB6A)],
+                      colors: [
+                        Color(0xFF42A5F5),
+                        ChiromoColors.primary,
+                        Color(0xFF66BB6A),
+                      ],
                     ),
                     barWidth: 3.5,
                     isStrokeCapRound: true,
@@ -693,10 +779,18 @@ class _MoodChart extends StatelessWidget {
   }
 
   String _moodEmojiUrl(double mood) {
-    if (mood <= 2) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
-    if (mood <= 4) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png';
-    if (mood <= 6) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
-    if (mood <= 8) return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png';
+    if (mood <= 2) {
+      return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Disappointed%20face/3D/disappointed_face_3d.png';
+    }
+    if (mood <= 4) {
+      return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Confused%20face/3D/confused_face_3d.png';
+    }
+    if (mood <= 6) {
+      return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Neutral%20face/3D/neutral_face_3d.png';
+    }
+    if (mood <= 8) {
+      return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Slightly%20smiling%20face/3D/slightly_smiling_face_3d.png';
+    }
     return 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png';
   }
 }
@@ -710,8 +804,9 @@ class _MoodInsightsCard extends StatelessWidget {
     if (data.isEmpty) return const SizedBox();
 
     final theme = Theme.of(context);
-    final avgMood = data.map((e) => e.mood).reduce((a, b) => a + b) / data.length;
-    
+    final avgMood =
+        data.map((e) => e.mood).reduce((a, b) => a + b) / data.length;
+
     String title = '';
     String description = '';
     IconData icon = Icons.auto_awesome;
@@ -719,17 +814,20 @@ class _MoodInsightsCard extends StatelessWidget {
 
     if (avgMood >= 7.5) {
       title = 'Doing Great!';
-      description = 'Your mood has been consistently high. Keep up the positive habits and behaviors that are working for you.';
+      description =
+          'Your mood has been consistently high. Keep up the positive habits and behaviors that are working for you.';
       icon = Icons.sentiment_very_satisfied;
       color = ChiromoColors.success;
     } else if (avgMood >= 4.5) {
       title = 'Holding Steady';
-      description = 'You are maintaining a balanced mood. This is a great time to practice some mindfulness or CBT exercises to build resilience.';
+      description =
+          'You are maintaining a balanced mood. This is a great time to practice some mindfulness or CBT exercises to build resilience.';
       icon = Icons.balance;
       color = const Color(0xFF42A5F5);
     } else {
       title = 'Needs Attention';
-      description = 'We noticed your mood has been a bit low lately. Consider booking a session with your specialist or trying a Thought Record exercise today.';
+      description =
+          'We noticed your mood has been a bit low lately. Consider booking a session with your specialist or trying a Thought Record exercise today.';
       icon = Icons.health_and_safety_outlined;
       color = const Color(0xFFFFA726); // Orange warning
     }
@@ -740,9 +838,7 @@ class _MoodInsightsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,4 +880,3 @@ class _MoodInsightsCard extends StatelessWidget {
     );
   }
 }
-

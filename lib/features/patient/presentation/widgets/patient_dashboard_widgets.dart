@@ -7,6 +7,7 @@ import '../../../appointments/presentation/providers/appointment_providers.dart'
 import '../../../../core/constants/app_constants.dart';
 import '../../../../theme/chiromo_colors.dart';
 import '../screens/appointment_detail_screen.dart';
+import '../../../../features/doctor/presentation/widgets/doctor_review_dialog.dart';
 
 class MoodButton extends StatelessWidget {
   final String imageUrl;
@@ -44,15 +45,15 @@ class MoodButton extends StatelessWidget {
               imageUrl,
               width: 32,
               height: 32,
-              errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 32),
+              errorBuilder: (_, _, _) => const Icon(Icons.mood, size: 32),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -109,29 +110,35 @@ class QuickActionCard extends StatelessWidget {
                     child: imagePath != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(14),
-                            child: Image.asset(
-                              imagePath!,
-                              fit: BoxFit.contain,
-                            ),
+                            child: Image.asset(imagePath!, fit: BoxFit.contain),
                           )
                         : Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [ChiromoColors.primaryLighter, Colors.white],
+                                colors: [
+                                  ChiromoColors.primaryLighter,
+                                  Colors.white,
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: ChiromoColors.primaryDark.withValues(alpha: 0.2),
+                                  color: ChiromoColors.primaryDark.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   blurRadius: 6,
                                   offset: const Offset(2, 4),
                                 ),
                               ],
                             ),
-                            child: Icon(icon, size: 32, color: ChiromoColors.primary),
+                            child: Icon(
+                              icon,
+                              size: 32,
+                              color: ChiromoColors.primary,
+                            ),
                           ),
                   ),
                 ),
@@ -172,7 +179,11 @@ class QuickActionCard extends StatelessWidget {
                         color: theme.colorScheme.primaryContainer,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.arrow_forward_ios, size: 12, color: theme.colorScheme.primary),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -199,7 +210,9 @@ class SmallStat extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
+              Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.6),
               Theme.of(context).cardColor,
             ],
             begin: Alignment.topLeft,
@@ -253,14 +266,20 @@ class AppointmentTabs extends ConsumerWidget {
     int upcomingCount = 0;
     int recentCount = 0;
     int cancelledCount = 0;
-    
+
     final now = DateTime.now();
     Color? upcomingCountColor;
 
     appointmentsAsync.whenData((appointments) {
-      final upcomingAppts = appointments.where((a) => a.scheduledAt.isAfter(now) && a.status != AppConstants.statusCancelled).toList();
+      final upcomingAppts = appointments
+          .where(
+            (a) =>
+                a.scheduledAt.isAfter(now) &&
+                a.status != AppConstants.statusCancelled,
+          )
+          .toList();
       upcomingCount = upcomingAppts.length;
-      
+
       if (upcomingAppts.isNotEmpty) {
         upcomingAppts.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
         final closest = upcomingAppts.first.scheduledAt;
@@ -274,8 +293,21 @@ class AppointmentTabs extends ConsumerWidget {
         }
       }
 
-      recentCount = appointments.where((a) => a.scheduledAt.isBefore(now) && a.status != AppConstants.statusCancelled && a.status != AppConstants.statusRejected).length;
-      cancelledCount = appointments.where((a) => a.status == AppConstants.statusCancelled || a.status == AppConstants.statusRejected).length;
+      recentCount = appointments
+          .where(
+            (a) =>
+                a.scheduledAt.isBefore(now) &&
+                a.status != AppConstants.statusCancelled &&
+                a.status != AppConstants.statusRejected,
+          )
+          .length;
+      cancelledCount = appointments
+          .where(
+            (a) =>
+                a.status == AppConstants.statusCancelled ||
+                a.status == AppConstants.statusRejected,
+          )
+          .length;
     });
 
     Widget buildTab(String title, int count, [Color? badgeColor]) {
@@ -297,7 +329,9 @@ class AppointmentTabs extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: badgeColor != null ? Colors.white : theme.colorScheme.onPrimaryContainer,
+                    color: badgeColor != null
+                        ? Colors.white
+                        : theme.colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -307,17 +341,43 @@ class AppointmentTabs extends ConsumerWidget {
       );
     }
 
-    int initialIndex = 0;
-    if (upcomingCount == 0) {
-      if (recentCount > 0) {
-        initialIndex = 1;
-      } else if (cancelledCount > 0) {
-        initialIndex = 2;
-      }
+    List<Widget> activeTabs = [];
+    List<Widget> activeViews = [];
+
+    void addTab(
+      String title,
+      int count,
+      _AppointmentFilter filter, [
+      Color? badgeColor,
+    ]) {
+      activeTabs.add(buildTab(title, count, badgeColor));
+      activeViews.add(_AppointmentsByFilter(filter: filter));
+    }
+
+    if (upcomingCount == 0 && recentCount > 0) {
+      // Recent comes first
+      addTab('Recent', recentCount, _AppointmentFilter.recent);
+      addTab(
+        'Upcoming',
+        upcomingCount,
+        _AppointmentFilter.upcoming,
+        upcomingCountColor,
+      );
+      addTab('Cancelled', cancelledCount, _AppointmentFilter.cancelled);
+    } else {
+      // Normal order
+      addTab(
+        'Upcoming',
+        upcomingCount,
+        _AppointmentFilter.upcoming,
+        upcomingCountColor,
+      );
+      addTab('Recent', recentCount, _AppointmentFilter.recent);
+      addTab('Cancelled', cancelledCount, _AppointmentFilter.cancelled);
     }
 
     return DefaultTabController(
-      initialIndex: initialIndex,
+      initialIndex: 0,
       length: 3,
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -346,23 +406,10 @@ class AppointmentTabs extends ConsumerWidget {
                 ),
                 insets: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              tabs: [
-                buildTab('Upcoming', upcomingCount, upcomingCountColor),
-                buildTab('Recent', recentCount),
-                buildTab('Cancelled', cancelledCount),
-              ],
+              tabs: activeTabs,
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 240,
-              child: TabBarView(
-                children: const [
-                  _AppointmentsByFilter(filter: _AppointmentFilter.upcoming),
-                  _AppointmentsByFilter(filter: _AppointmentFilter.recent),
-                  _AppointmentsByFilter(filter: _AppointmentFilter.cancelled),
-                ],
-              ),
-            ),
+            SizedBox(height: 240, child: TabBarView(children: activeViews)),
           ],
         ),
       ),
@@ -421,7 +468,11 @@ class _AppointmentsByFilter extends ConsumerWidget {
               case _AppointmentFilter.cancelled:
                 appts =
                     appointments
-                        .where((a) => a.status == AppConstants.statusCancelled || a.status == AppConstants.statusRejected)
+                        .where(
+                          (a) =>
+                              a.status == AppConstants.statusCancelled ||
+                              a.status == AppConstants.statusRejected,
+                        )
                         .toList()
                       ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
                 break;
@@ -473,7 +524,7 @@ class _AppointmentsByFilter extends ConsumerWidget {
 
                 Color statusColor = ChiromoColors.primary;
                 String statusText = 'Upcoming';
-                
+
                 switch (appt.status) {
                   case AppConstants.statusCompleted:
                     statusColor = ChiromoColors.success;
@@ -537,7 +588,7 @@ class _AppointmentsByFilter extends ConsumerWidget {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: filter == _AppointmentFilter.cancelled 
+                            color: filter == _AppointmentFilter.cancelled
                                 ? ChiromoColors.error.withValues(alpha: 0.3)
                                 : theme.dividerColor.withValues(alpha: 0.2),
                           ),
@@ -557,8 +608,13 @@ class _AppointmentsByFilter extends ConsumerWidget {
                                 width: 56,
                                 height: 56,
                                 fit: BoxFit.cover,
-                                color: filter == _AppointmentFilter.cancelled ? Colors.grey : null,
-                                colorBlendMode: filter == _AppointmentFilter.cancelled ? BlendMode.saturation : null,
+                                color: filter == _AppointmentFilter.cancelled
+                                    ? Colors.grey
+                                    : null,
+                                colorBlendMode:
+                                    filter == _AppointmentFilter.cancelled
+                                    ? BlendMode.saturation
+                                    : null,
                               ),
                             ),
                             const SizedBox(width: 14),
@@ -571,19 +627,32 @@ class _AppointmentsByFilter extends ConsumerWidget {
                                       Expanded(
                                         child: Text(
                                           doctorName,
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            decoration: filter == _AppointmentFilter.cancelled ? TextDecoration.lineThrough : null,
-                                          ),
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                decoration:
+                                                    filter ==
+                                                        _AppointmentFilter
+                                                            .cancelled
+                                                    ? TextDecoration.lineThrough
+                                                    : null,
+                                              ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(8),
+                                          color: statusColor.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           statusText,
@@ -600,7 +669,10 @@ class _AppointmentsByFilter extends ConsumerWidget {
                                   Text(
                                     specialty,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: filter == _AppointmentFilter.cancelled ? Colors.grey : ChiromoColors.primary,
+                                      color:
+                                          filter == _AppointmentFilter.cancelled
+                                          ? Colors.grey
+                                          : ChiromoColors.primary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -615,13 +687,82 @@ class _AppointmentsByFilter extends ConsumerWidget {
                                       const SizedBox(width: 4),
                                       Text(
                                         '$dateStr • $timeStr',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.hintColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.hintColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
                                     ],
                                   ),
+                                  if (filter == _AppointmentFilter.recent &&
+                                      (appt.status ==
+                                              AppConstants.statusCompleted ||
+                                          appt.status ==
+                                              AppConstants
+                                                  .statusConfirmed)) ...[
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 32,
+                                      child: appt.isRated
+                                          ? OutlinedButton.icon(
+                                              onPressed: null,
+                                              icon: const Icon(
+                                                Icons.star_rounded,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                'Rated',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: Colors.grey,
+                                                disabledForegroundColor: Colors
+                                                    .orange
+                                                    .withValues(alpha: 0.8),
+                                                side: BorderSide(
+                                                  color: Colors.orange
+                                                      .withValues(alpha: 0.3),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 0,
+                                                    ),
+                                              ),
+                                            )
+                                          : OutlinedButton.icon(
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (_) =>
+                                                      DoctorReviewDialog(
+                                                        appointment: appt,
+                                                      ),
+                                                );
+                                              },
+                                              icon: const Icon(
+                                                Icons.star_outline_rounded,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                'Rate Session',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: Colors.orange,
+                                                side: BorderSide(
+                                                  color: Colors.orange
+                                                      .withValues(alpha: 0.5),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 0,
+                                                    ),
+                                              ),
+                                            ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

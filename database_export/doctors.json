@@ -1,0 +1,10 @@
+﻿{
+    "id":  "ef487f39-01ed-4493-ad72-7cfb78b33722",
+    "user_id":  "d05eb87f-d767-4a76-864c-b9d3b37f4173",
+    "specialty":  "General Practitioner",
+    "qualifications":  "MBBS",
+    "consultation_fee":  250.00,
+    "is_available":  true,
+    "created_at":  "2026-07-15T10:20:50.884557+00:00",
+    "updated_at":  "2026-07-15T10:20:50.884557+00:00"
+}

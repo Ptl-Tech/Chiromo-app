@@ -1,0 +1,20 @@
+﻿[
+    {
+        "id":  "1cad87a7-bee6-40cf-8ca2-7a1d97e82af4",
+        "appointment_id":  "504b35a7-4300-4f11-8141-f5fba187eddf",
+        "patient_id":  "ceee9d17-a38c-4647-92a1-f376e6c96ec1",
+        "doctor_id":  "d05eb87f-d767-4a76-864c-b9d3b37f4173",
+        "rating":  5,
+        "review_text":  "best",
+        "created_at":  "2026-07-23T12:44:01.614707+00:00"
+    },
+    {
+        "id":  "bf90fe10-d044-4a84-aa75-decd68bc5bfc",
+        "appointment_id":  "798e28c3-0aef-4eb2-bb62-08901228aede",
+        "patient_id":  "ceee9d17-a38c-4647-92a1-f376e6c96ec1",
+        "doctor_id":  "d05eb87f-d767-4a76-864c-b9d3b37f4173",
+        "rating":  5,
+        "review_text":  "best",
+        "created_at":  "2026-07-23T12:53:41.763657+00:00"
+    }
+]

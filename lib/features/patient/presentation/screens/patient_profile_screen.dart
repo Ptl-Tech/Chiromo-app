@@ -107,7 +107,8 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
       final dateStr = dob.toIso8601String().split('T').first;
       final now = DateTime.now();
       int age = now.year - dob.year;
-      if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+      if (now.month < dob.month ||
+          (now.month == dob.month && now.day < dob.day)) {
         age--;
       }
       dobSubtitle = '$dateStr ($age yrs old)';
@@ -235,10 +236,17 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                               strokeWidth: 2,
                                             ),
                                           )
-                                        : const Icon(Icons.cloud_upload_outlined, size: 18),
-                                    label: Text(_isSaving ? 'Saving...' : 'Save Photo'),
+                                        : const Icon(
+                                            Icons.cloud_upload_outlined,
+                                            size: 18,
+                                          ),
+                                    label: Text(
+                                      _isSaving ? 'Saving...' : 'Save Photo',
+                                    ),
                                     style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -392,7 +400,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
             final dobText = selectedDob != null
                 ? selectedDob!.toLocal().toIso8601String().split('T').first
                 : 'Select your date of birth';
-                
+
             return Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -403,7 +411,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -508,26 +519,41 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
                             decoration: BoxDecoration(
-                              color: ChiromoColors.surfaceVariant.withValues(alpha: 0.5),
+                              color: ChiromoColors.surfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: Colors.transparent),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.calendar_today_outlined, color: ChiromoColors.textSecondary, size: 20),
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: ChiromoColors.textSecondary,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     dobText,
                                     style: TextStyle(
                                       fontSize: 15,
-                                      color: selectedDob != null ? Colors.black87 : ChiromoColors.textSecondary,
+                                      color: selectedDob != null
+                                          ? Colors.black87
+                                          : ChiromoColors.textSecondary,
                                     ),
                                   ),
                                 ),
-                                Icon(Icons.edit_calendar, color: ChiromoColors.primary, size: 20),
+                                Icon(
+                                  Icons.edit_calendar,
+                                  color: ChiromoColors.primary,
+                                  size: 20,
+                                ),
                               ],
                             ),
                           ),
@@ -539,13 +565,18 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                               child: OutlinedButton(
                                 onPressed: () => Navigator.of(ctx).pop(),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   side: BorderSide(color: Colors.grey.shade300),
                                 ),
-                                child: const Text('Cancel', style: TextStyle(color: Colors.black87)),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Colors.black87),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -557,13 +588,22 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                     final updatedUser = await ref
                                         .read(authRepositoryProvider)
                                         .updateProfile(
-                                          firstName: firstNameController.text.trim().isEmpty
+                                          firstName:
+                                              firstNameController.text
+                                                  .trim()
+                                                  .isEmpty
                                               ? null
                                               : firstNameController.text.trim(),
-                                          lastName: lastNameController.text.trim().isEmpty
+                                          lastName:
+                                              lastNameController.text
+                                                  .trim()
+                                                  .isEmpty
                                               ? null
                                               : lastNameController.text.trim(),
-                                          phone: phoneController.text.trim().isEmpty
+                                          phone:
+                                              phoneController.text
+                                                  .trim()
+                                                  .isEmpty
                                               ? null
                                               : phoneController.text.trim(),
                                           dateOfBirth: selectedDob,
@@ -577,7 +617,9 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Profile updated successfully'),
+                                        content: Text(
+                                          'Profile updated successfully',
+                                        ),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -585,14 +627,18 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to update profile: $e'),
+                                        content: Text(
+                                          'Failed to update profile: $e',
+                                        ),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
                                   }
                                 },
                                 style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   backgroundColor: ChiromoColors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -640,17 +686,25 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           decoration: InputDecoration(
-            prefixIcon: icon != null ? Icon(icon, color: ChiromoColors.textSecondary, size: 20) : null,
+            prefixIcon: icon != null
+                ? Icon(icon, color: ChiromoColors.textSecondary, size: 20)
+                : null,
             filled: true,
             fillColor: ChiromoColors.surfaceVariant.withValues(alpha: 0.5),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: ChiromoColors.primary, width: 2),
+              borderSide: const BorderSide(
+                color: ChiromoColors.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -689,20 +743,28 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
             ),
             const SizedBox(height: 24),
             SwitchListTile(
-              title: const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('Receive alerts for appointments and messages'),
+              title: const Text(
+                'Push Notifications',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'Receive alerts for appointments and messages',
+              ),
               value: true,
-              activeColor: ChiromoColors.primary,
+              activeThumbColor: ChiromoColors.primary,
               onChanged: (val) {
                 // Future integration: update user preferences
               },
             ),
             const Divider(),
             SwitchListTile(
-              title: const Text('Email Updates', style: TextStyle(fontWeight: FontWeight.w600)),
+              title: const Text(
+                'Email Updates',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: const Text('Weekly check-in summaries and tips'),
               value: false,
-              activeColor: ChiromoColors.primary,
+              activeThumbColor: ChiromoColors.primary,
               onChanged: (val) {},
             ),
           ],
@@ -749,22 +811,36 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                   children: [
                     const Text(
                       'Chiromo Hospital Group Data Policy',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'At Chiromo Hospital Group (CHG), your privacy and mental health records are treated with the highest degree of confidentiality in accordance with the Data Protection Act of Kenya and international healthcare ethics. Our staff are mandated to protect patient privacy as part of their professional responsibilities.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     const Text(
                       'Terms of Service',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'By using this application, you agree to CHG\'s operational and administrative guidelines when accessing services, scheduling appointments, or making payments. This platform serves as an extension of our in-patient, out-patient, and virtual center services.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 40),
                   ],
@@ -778,9 +854,14 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 onPressed: () => Navigator.pop(context),
                 style: FilledButton.styleFrom(
                   backgroundColor: ChiromoColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('I Understand', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'I Understand',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -830,7 +911,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 backgroundColor: ChiromoColors.surfaceVariant,
                 child: Icon(Icons.phone, color: ChiromoColors.primary),
               ),
-              title: const Text('+254 0750 927 232', style: TextStyle(fontWeight: FontWeight.w600)),
+              title: const Text(
+                '+254 0750 927 232',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: const Text('24/7 Helpline'),
             ),
             ListTile(
@@ -839,7 +923,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 backgroundColor: ChiromoColors.surfaceVariant,
                 child: Icon(Icons.email, color: ChiromoColors.primary),
               ),
-              title: const Text('clientservices@chiromohg.co.ke', style: TextStyle(fontWeight: FontWeight.w600)),
+              title: const Text(
+                'clientservices@chiromohg.co.ke',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: const Text('Email Support'),
             ),
             ListTile(
@@ -848,7 +935,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 backgroundColor: ChiromoColors.surfaceVariant,
                 child: Icon(Icons.location_on, color: ChiromoColors.primary),
               ),
-              title: const Text('37 Muthangari Road', style: TextStyle(fontWeight: FontWeight.w600)),
+              title: const Text(
+                '37 Muthangari Road',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: const Text('Nairobi, Kenya'),
             ),
           ],
@@ -874,7 +964,12 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     );
   }
 
-  Widget _buildProfileTile(IconData icon, String title, String subtitle, {VoidCallback? onTap}) {
+  Widget _buildProfileTile(
+    IconData icon,
+    String title,
+    String subtitle, {
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 6),
       minLeadingWidth: 0,

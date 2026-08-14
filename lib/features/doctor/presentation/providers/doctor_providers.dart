@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/api_service.dart';
 import '../../domain/entities/doctor_entity.dart';
 import '../../domain/repositories/doctor_repository.dart';
 import '../../data/datasources/doctor_remote_datasource.dart';
@@ -6,7 +7,7 @@ import '../../data/repositories/doctor_repository_impl.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
 final doctorRemoteDataSourceProvider = Provider<DoctorRemoteDataSource>((ref) {
-  return DoctorRemoteDataSource();
+  return DoctorRemoteDataSource(ApiService.dio);
 });
 
 final doctorRepositoryProvider = Provider<DoctorRepository>((ref) {

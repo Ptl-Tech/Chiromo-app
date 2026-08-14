@@ -69,7 +69,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               );
             },
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
         ],
@@ -78,8 +78,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 24),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.4),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.4,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: TabBar(
@@ -100,9 +101,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               labelColor: Colors.white,
               unselectedLabelColor: theme.hintColor,
               labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 13),
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
               unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500, fontSize: 13),
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
               padding: const EdgeInsets.all(3),
               tabs: const [
                 Tab(text: 'All'),
@@ -118,13 +123,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.notifications_off_outlined,
-                  size: 56, color: theme.hintColor),
+              Icon(
+                Icons.notifications_off_outlined,
+                size: 56,
+                color: theme.hintColor,
+              ),
               const SizedBox(height: 12),
               Text(
                 'Unable to load notifications',
-                style: theme.textTheme.bodyLarge
-                    ?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
@@ -136,8 +145,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           ),
         ),
         data: (notifications) {
-          final unread =
-              notifications.where((n) => !n.isRead).toList();
+          final unread = notifications.where((n) => !n.isRead).toList();
 
           return TabBarView(
             controller: _tabController,
@@ -211,8 +219,7 @@ class _NotificationList extends StatelessWidget {
                 color: ChiromoColors.primarySurface,
                 shape: BoxShape.circle,
               ),
-              child: Icon(emptyIcon,
-                  size: 48, color: ChiromoColors.primary),
+              child: Icon(emptyIcon, size: 48, color: ChiromoColors.primary),
             ),
             const SizedBox(height: 16),
             Text(
@@ -268,7 +275,8 @@ class _NotificationList extends StatelessWidget {
   }
 
   List<_NotificationGroup> _groupByDate(
-      List<NotificationEntity> notifications) {
+    List<NotificationEntity> notifications,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -277,8 +285,11 @@ class _NotificationList extends StatelessWidget {
     final Map<String, String> labels = {};
 
     for (final notif in notifications) {
-      final date =
-          DateTime(notif.createdAt.year, notif.createdAt.month, notif.createdAt.day);
+      final date = DateTime(
+        notif.createdAt.year,
+        notif.createdAt.month,
+        notif.createdAt.day,
+      );
       String key;
       if (date == today) {
         key = 'today';
@@ -294,8 +305,10 @@ class _NotificationList extends StatelessWidget {
     }
 
     return groups.entries
-        .map((e) =>
-            _NotificationGroup(label: labels[e.key]!, notifications: e.value))
+        .map(
+          (e) =>
+              _NotificationGroup(label: labels[e.key]!, notifications: e.value),
+        )
         .toList();
   }
 }
@@ -312,10 +325,7 @@ class _NotificationCard extends StatelessWidget {
   final NotificationEntity notification;
   final VoidCallback onTap;
 
-  const _NotificationCard({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationCard({required this.notification, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -323,9 +333,7 @@ class _NotificationCard extends StatelessWidget {
     final isUnread = !notification.isRead;
 
     return Material(
-      color: isUnread
-          ? ChiromoColors.primarySurface
-          : theme.cardColor,
+      color: isUnread ? ChiromoColors.primarySurface : theme.cardColor,
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -353,8 +361,9 @@ class _NotificationCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: _iconBgColor(notification.type)
-                          .withValues(alpha: 0.3),
+                      color: _iconBgColor(
+                        notification.type,
+                      ).withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -378,8 +387,9 @@ class _NotificationCard extends StatelessWidget {
                           child: Text(
                             notification.title,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight:
-                                  isUnread ? FontWeight.w800 : FontWeight.w600,
+                              fontWeight: isUnread
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               letterSpacing: 0.1,
                             ),
                             maxLines: 1,
