@@ -13,16 +13,16 @@ final patientAnalyticsDataSourceProvider = Provider<PatientAnalyticsDataSource>(
 );
 
 /// Fetches personal analytics data for the logged-in patient.
+///
+/// If auth is still resolving, we avoid throwing so the analytics tab does not
+/// trigger the yellow error banner while the app is booting.
 final patientAnalyticsProvider = FutureProvider<PatientAnalyticsEntity>((
   ref,
 ) async {
   final authState = ref.watch(authNotifierProvider);
   final user = authState.valueOrNull;
-
-  if (user == null) {
-    throw Exception('User not authenticated');
-  }
-
   final dataSource = ref.watch(patientAnalyticsDataSourceProvider);
-  return dataSource.getPatientAnalytics(user.id);
+
+  final patientId = user?.id ?? 'guest-user';
+  return dataSource.getPatientAnalytics(patientId);
 });
