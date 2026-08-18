@@ -54,12 +54,18 @@ class PatientDashboardScreen extends ConsumerWidget {
       showAppBar: false,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/patient/emergency'),
-        backgroundColor: ChiromoColors.error,
+        backgroundColor: const Color(0xFFE57373).withValues(alpha: 0.9),
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.emergency),
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.emergency, size: 22),
         label: const Text(
           'SOS',
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            fontSize: 14,
+          ),
         ),
       ),
       body: SafeArea(

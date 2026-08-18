@@ -19,7 +19,7 @@ class CbtToolsScreen extends ConsumerWidget {
       title: 'CBT Tools',
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -40,10 +40,19 @@ class CbtToolsScreen extends ConsumerWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFF8F0).withValues(alpha: 0.7),
+                          const Color(0xFFFFEFD5).withValues(alpha: 0.5),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFFFD6A5).withValues(alpha: 0.25),
+                        width: 1,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -51,7 +60,7 @@ class CbtToolsScreen extends ConsumerWidget {
                         Icon(
                           Icons.star_rounded,
                           size: 16,
-                          color: Colors.amber.shade700,
+                          color: const Color(0xFFC17817).withValues(alpha: 0.8),
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -59,7 +68,9 @@ class CbtToolsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.amber.shade800,
+                            color: const Color(
+                              0xFFC17817,
+                            ).withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -267,58 +278,98 @@ class _BannerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      elevation: 0,
-      borderRadius: 16,
+      elevation: 0.5,
+      borderRadius: 20,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              imagePath != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        imagePath!,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: iconBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 28),
-                    ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: ChiromoColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              Icon(Icons.chevron_right, color: ChiromoColors.textTertiary),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                imagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Image.asset(
+                            imagePath!,
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: iconBg.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: iconColor.withValues(alpha: 0.15),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: iconColor.withValues(alpha: 0.95),
+                          size: 28,
+                        ),
+                      ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: ChiromoColors.textSecondary.withValues(
+                            alpha: 0.85,
+                          ),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: ChiromoColors.textTertiary.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -348,43 +399,71 @@ class _ExerciseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 0.5,
+      shadowColor: Colors.grey.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: ChiromoColors.border.withValues(alpha: 0.6)),
+        side: BorderSide(
+          color: ChiromoColors.border.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: ExpansionTile(
         leading: imagePath != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  imagePath!,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                  child: Image.asset(
+                    imagePath!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               )
             : Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: iconBg,
+                  color: iconBg.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: iconColor.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(icon, color: iconColor, size: 26),
+                child: Icon(
+                  icon,
+                  color: iconColor.withValues(alpha: 0.9),
+                  size: 26,
+                ),
               ),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            fontSize: 13,
-            color: ChiromoColors.textSecondary,
-            height: 1.3,
+            fontSize: 12.5,
+            color: ChiromoColors.textSecondary.withValues(alpha: 0.8),
+            height: 1.4,
           ),
         ),
-        trailing: Icon(Icons.expand_more, color: ChiromoColors.textTertiary),
+        trailing: Icon(
+          Icons.expand_more,
+          color: ChiromoColors.textTertiary.withValues(alpha: 0.6),
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

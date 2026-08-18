@@ -55,7 +55,7 @@ class AppScaffold extends ConsumerWidget {
             )
           : null,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(child: body),
+      body: body,
       floatingActionButton: floatingActionButton,
     );
   }

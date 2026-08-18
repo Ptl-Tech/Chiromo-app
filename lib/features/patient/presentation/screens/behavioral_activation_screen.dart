@@ -36,8 +36,9 @@ class _BehavioralActivationScreenState
     return AppScaffold(
       title: 'Behavioral Activation',
       showBack: true,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Form(
           key: _formKey,
           child: Column(
@@ -47,10 +48,26 @@ class _BehavioralActivationScreenState
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFFFF8F0).withValues(alpha: 0.8),
+                      const Color(0xFFFFEFD5).withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFFFD6A5).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFB366).withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [

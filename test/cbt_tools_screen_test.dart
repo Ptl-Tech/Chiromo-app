@@ -23,7 +23,7 @@ void main() {
     );
 
     final router = GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, __) => const CbtToolsScreen())],
+      routes: [GoRoute(path: '/', builder: (_, _) => const CbtToolsScreen())],
     );
 
     await tester.pumpWidget(

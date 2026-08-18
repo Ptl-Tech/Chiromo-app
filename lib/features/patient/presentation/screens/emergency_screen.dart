@@ -52,31 +52,32 @@ class EmergencyScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Emergency & Crisis',
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Immediate Danger Card
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    ChiromoColors.error.withValues(alpha: 0.15),
-                    ChiromoColors.error.withValues(alpha: 0.05),
+                    const Color(0xFFFFE4E1).withValues(alpha: 0.6),
+                    const Color(0xFFFFE4E4).withValues(alpha: 0.4),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: ChiromoColors.error.withValues(alpha: 0.3),
+                  color: const Color(0xFFFFB3BA).withValues(alpha: 0.25),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: ChiromoColors.error.withValues(alpha: 0.1),
-                    blurRadius: 10,
+                    color: const Color(0xFFFF6B7A).withValues(alpha: 0.08),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -95,7 +96,7 @@ class EmergencyScreen extends ConsumerWidget {
                       child: Text(
                         'If you or someone else is in immediate danger, please go to the nearest emergency room or call emergency services immediately.',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: ChiromoColors.error,
+                          color: const Color(0xFFD32F2F).withValues(alpha: 0.85),
                           fontWeight: FontWeight.w700,
                           height: 1.4,
                         ),
