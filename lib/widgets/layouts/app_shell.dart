@@ -177,10 +177,40 @@ class AppShell extends ConsumerWidget {
     switch (role) {
       case UserRole.patient:
         return const [
-          _NavItem('Home', Icons.home_outlined, Icons.home, '/patient', 'assets/images/nav/home.png'),
-          _NavItem('Appointments', Icons.event_outlined, Icons.event, '/patient/history', 'assets/images/nav/appointments.png'),
-          _NavItem('Messages', Icons.chat_outlined, Icons.chat, '/patient/messages', 'assets/images/nav/messages.png'),
-          _NavItem('Profile', Icons.person_outline, Icons.person, '/patient/profile', 'assets/images/nav/profile.png'),
+          _NavItem(
+            'Home',
+            Icons.home_outlined,
+            Icons.home,
+            '/patient',
+            'assets/images/nav/home.png',
+          ),
+          _NavItem(
+            'Appointments',
+            Icons.event_outlined,
+            Icons.event,
+            '/patient/history',
+            'assets/images/nav/appointments.png',
+          ),
+          _NavItem(
+            'Messages',
+            Icons.chat_outlined,
+            Icons.chat,
+            '/patient/messages',
+            'assets/images/nav/messages.png',
+          ),
+          _NavItem(
+            'Analytics',
+            Icons.analytics_outlined,
+            Icons.analytics,
+            '/patient/analytics',
+          ),
+          _NavItem(
+            'Profile',
+            Icons.person_outline,
+            Icons.person,
+            '/patient/profile',
+            'assets/images/nav/profile.png',
+          ),
         ];
       case UserRole.doctor:
       case UserRole.psychiatrist:
@@ -302,7 +332,13 @@ class _NavItem {
   final String route;
   final String? imageAsset;
 
-  const _NavItem(this.label, this.icon, this.activeIcon, this.route, [this.imageAsset]);
+  const _NavItem(
+    this.label,
+    this.icon,
+    this.activeIcon,
+    this.route, [
+    this.imageAsset,
+  ]);
 }
 
 /// Expanded sidebar used on desktop breakpoints.
@@ -403,12 +439,31 @@ class _DesktopSidebar extends StatelessWidget {
                                 height: 24,
                                 child: ColorFiltered(
                                   colorFilter: selected
-                                      ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                                      ? const ColorFilter.mode(
+                                          Colors.transparent,
+                                          BlendMode.multiply,
+                                        )
                                       : const ColorFilter.matrix(<double>[
-                                          0.2126, 0.7152, 0.0722, 0, 0,
-                                          0.2126, 0.7152, 0.0722, 0, 0,
-                                          0.2126, 0.7152, 0.0722, 0, 0,
-                                          0,      0,      0,      1, 0,
+                                          0.2126,
+                                          0.7152,
+                                          0.0722,
+                                          0,
+                                          0,
+                                          0.2126,
+                                          0.7152,
+                                          0.0722,
+                                          0,
+                                          0,
+                                          0.2126,
+                                          0.7152,
+                                          0.0722,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          1,
+                                          0,
                                         ]),
                                   child: Opacity(
                                     opacity: selected ? 1.0 : 0.6,

@@ -279,7 +279,12 @@ class _BannerCard extends StatelessWidget {
               imagePath != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(imagePath!, width: 52, height: 52, fit: BoxFit.cover),
+                      child: Image.asset(
+                        imagePath!,
+                        width: 52,
+                        height: 52,
+                        fit: BoxFit.cover,
+                      ),
                     )
                   : Container(
                       padding: const EdgeInsets.all(12),
@@ -352,7 +357,12 @@ class _ExerciseCard extends StatelessWidget {
         leading: imagePath != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(imagePath!, width: 50, height: 50, fit: BoxFit.cover),
+                child: Image.asset(
+                  imagePath!,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
               )
             : Container(
                 padding: const EdgeInsets.all(12),
@@ -415,7 +425,7 @@ class _ProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateStr =
         '${_monthName(exercise.createdAt.month)} ${exercise.createdAt.day}, ${exercise.createdAt.year}';
-    
+
     final imagePath = _imageForType(exercise.type);
 
     return Card(
@@ -427,117 +437,115 @@ class _ProgressCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Detailed view coming soon!')),
-          );
+          context.push('/patient/cbt/exercise-details', extra: exercise);
         },
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(
-                    imagePath,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  exercise.type.label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  dateStr,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ChiromoColors.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildTypeContent(),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (exercise.isShared) ...[
-                  Icon(
-                    Icons.check_circle,
-                    size: 14,
-                    color: ChiromoColors.success,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Shared',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: ChiromoColors.success,
-                      fontWeight: FontWeight.w500,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      imagePath,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ] else ...[
-                  Icon(
-                    Icons.lock_outline,
-                    size: 14,
-                    color: ChiromoColors.textTertiary,
-                  ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   Text(
-                    'Private',
+                    exercise.type.label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    dateStr,
                     style: TextStyle(
                       fontSize: 12,
                       color: ChiromoColors.textTertiary,
                     ),
                   ),
                 ],
-                if (exercise.hasDoctorFeedback) ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 14,
-                    color: ChiromoColors.primary,
-                  ),
-                  const SizedBox(width: 4),
+              ),
+              const SizedBox(height: 12),
+              _buildTypeContent(),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (exercise.isShared) ...[
+                    Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: ChiromoColors.success,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Shared',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ChiromoColors.success,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(
+                      Icons.lock_outline,
+                      size: 14,
+                      color: ChiromoColors.textTertiary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Private',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ChiromoColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                  if (exercise.hasDoctorFeedback) ...[
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 14,
+                      color: ChiromoColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Dr. Feedback',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ChiromoColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
                   Text(
-                    'Dr. Feedback',
+                    'DETAILS',
                     style: TextStyle(
                       fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: ChiromoColors.primary,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-                const Spacer(),
-                Text(
-                  'DETAILS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
                     color: ChiromoColors.primary,
                   ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.chevron_right,
-                  size: 16,
-                  color: ChiromoColors.primary,
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 

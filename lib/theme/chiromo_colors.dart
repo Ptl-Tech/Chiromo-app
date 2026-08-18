@@ -12,7 +12,7 @@ class ChiromoColors {
   static const Color primaryDarkest = Color(0xFF003359);
   static const Color primaryDark = Color(0xFF00497C);
   static const Color primary = Color(0xFF0060A2); // Chiromo Brand Blue
-  static const Color primaryLight = Color(0xFF3380B5); 
+  static const Color primaryLight = Color(0xFF3380B5);
   static const Color primaryLighter = Color(0xFF99BFE1);
   static const Color primarySurface = Color(0xFFE5EFF6);
 
@@ -46,8 +46,8 @@ class ChiromoColors {
   static const Color surfaceVariant = Color(0xFFEBF1F6);
   static const Color border = Color(0xFFD1DDE8);
   static const Color divider = Color(0xFFE0E5EC);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
+  static const Color textPrimary = Color(0xFF495057);
+  static const Color textSecondary = Color(0xFF6C757D);
   static const Color textTertiary = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 

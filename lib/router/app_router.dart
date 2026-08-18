@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/admin/presentation/screens/analytics_screen.dart';
+import '../features/patient/presentation/screens/patient_analytics_screen.dart';
 import '../features/auth/domain/entities/user_entity.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -24,6 +25,8 @@ import '../features/patient/presentation/screens/cbt_tools_screen.dart';
 import '../features/patient/presentation/screens/thought_record_screen.dart';
 import '../features/patient/presentation/screens/behavioral_activation_screen.dart';
 import '../features/patient/presentation/screens/exposure_ladder_screen.dart';
+import '../features/patient/presentation/screens/cbt_exercise_details_screen.dart';
+import '../features/patient/domain/entities/cbt_exercise_entity.dart';
 import '../features/patient/presentation/screens/health_screen.dart';
 import '../features/patient/presentation/screens/messages_screen.dart';
 import '../features/patient/presentation/screens/daily_checkin_screen.dart';
@@ -74,10 +77,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/welcome');
 
       if (!isLoggedIn && !isAuthRoute) return '/welcome';
-      
+
       final isLocked = securityState?.isAppLocked ?? false;
       final isLockRoute = state.matchedLocation == '/lock';
-      
+
       if (isLoggedIn) {
         if (isLocked && !isLockRoute) return '/lock';
         if (!isLocked && isLockRoute) return _homeForRole(user.role);
@@ -86,6 +89,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && isAuthRoute) return _homeForRole(user.role);
 
       if (isLoggedIn && !isAuthRoute && !isLockRoute) {
+        // Allow patient analytics and admin analytics routes
+        if (state.matchedLocation.startsWith('/patient/analytics') ||
+            state.matchedLocation.startsWith('/analytics')) {
+          return null;
+        }
+
         final allowedPrefix = _allowedPathPrefix(user.role);
         if (!state.matchedLocation.startsWith(allowedPrefix)) {
           return _homeForRole(user.role);
@@ -135,56 +144,55 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/patient',
             name: 'patient-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(const PatientDashboardScreen()),
+            pageBuilder: (_, _) => _fadePage(const PatientDashboardScreen()),
           ),
           GoRoute(
             path: '/patient/history',
             name: 'appointment-history',
-            pageBuilder: (_, _) =>
-                _fadePage(const AppointmentHistoryScreen()),
+            pageBuilder: (_, _) => _fadePage(const AppointmentHistoryScreen()),
           ),
           GoRoute(
             path: '/patient/health',
             name: 'patient-health',
-            pageBuilder: (_, _) =>
-                _fadePage(const HealthScreen()),
+            pageBuilder: (_, _) => _fadePage(const HealthScreen()),
           ),
           GoRoute(
             path: '/patient/messages',
             name: 'patient-messages',
-            pageBuilder: (_, _) =>
-                _fadePage(const MessagesScreen()),
+            pageBuilder: (_, _) => _fadePage(const MessagesScreen()),
+          ),
+          GoRoute(
+            path: '/patient/analytics',
+            name: 'patient-analytics-dashboard',
+            pageBuilder: (_, _) => _fadePage(const PatientAnalyticsScreen()),
           ),
           GoRoute(
             path: '/patient/profile',
             name: 'patient-profile',
-            pageBuilder: (_, _) =>
-                _fadePage(const PatientProfileScreen()),
+            pageBuilder: (_, _) => _fadePage(const PatientProfileScreen()),
           ),
           GoRoute(
             path: '/patient/emergency',
             name: 'patient-emergency',
-            pageBuilder: (_, _) =>
-                _fadePage(const EmergencyScreen()),
+            pageBuilder: (_, _) => _fadePage(const EmergencyScreen()),
           ),
           GoRoute(
             path: '/patient/records',
             name: 'patient-records',
-            pageBuilder: (_, _) =>
-                _fadePage(const PatientRecordsScreen()),
+            pageBuilder: (_, _) => _fadePage(const PatientRecordsScreen()),
           ),
           GoRoute(
             path: '/patient/emergency/safety-plan',
             name: 'patient-safety-plan',
-            pageBuilder: (_, _) =>
-                _fadePage(const EditSafetyPlanScreen()),
+            pageBuilder: (_, _) => _fadePage(const EditSafetyPlanScreen()),
           ),
           GoRoute(
             path: '/patient/emergency/contact',
             name: 'patient-emergency-contact',
             pageBuilder: (_, state) {
-              final contact = state.extra as dynamic; // Can't easily import EmergencyContactEntity without adding import, let's just pass it or cast to dynamic
+              final contact =
+                  state.extra
+                      as dynamic; // Can't easily import EmergencyContactEntity without adding import, let's just pass it or cast to dynamic
               return _fadePage(EditEmergencyContactScreen(contact: contact));
             },
           ),
@@ -193,20 +201,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/doctor',
             name: 'doctor-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(DoctorDashboardScreen()),
+            pageBuilder: (_, _) => _fadePage(DoctorDashboardScreen()),
             routes: [
               GoRoute(
                 path: 'calendar',
                 name: 'doctor-calendar',
-                pageBuilder: (_, _) =>
-                    _fadePage(DoctorCalendarScreen()),
+                pageBuilder: (_, _) => _fadePage(DoctorCalendarScreen()),
               ),
               GoRoute(
                 path: 'patients',
                 name: 'doctor-patients',
-                pageBuilder: (_, _) =>
-                    _fadePage(PatientListScreen()),
+                pageBuilder: (_, _) => _fadePage(PatientListScreen()),
               ),
               GoRoute(
                 path: 'consultation/:appointmentId/:patientId',
@@ -221,14 +226,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'notes',
                 name: 'consultation-notes',
-                pageBuilder: (_, _) =>
-                    _fadePage(ConsultationNotesScreen()),
+                pageBuilder: (_, _) => _fadePage(ConsultationNotesScreen()),
               ),
               GoRoute(
                 path: 'profile',
                 name: 'doctor-profile',
-                pageBuilder: (_, _) =>
-                    _fadePage(DoctorProfileScreen()),
+                pageBuilder: (_, _) => _fadePage(DoctorProfileScreen()),
               ),
             ],
           ),
@@ -237,26 +240,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin',
             name: 'admin-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(AdminDashboardScreen()),
+            pageBuilder: (_, _) => _fadePage(AdminDashboardScreen()),
             routes: [
               GoRoute(
                 path: 'users',
                 name: 'user-management',
-                pageBuilder: (_, _) =>
-                    _fadePage(UserManagementScreen()),
+                pageBuilder: (_, _) => _fadePage(UserManagementScreen()),
               ),
               GoRoute(
                 path: 'branches',
                 name: 'branch-management',
-                pageBuilder: (_, _) =>
-                    _fadePage(BranchManagementScreen()),
+                pageBuilder: (_, _) => _fadePage(BranchManagementScreen()),
               ),
               GoRoute(
                 path: 'settings',
                 name: 'settings',
-                pageBuilder: (_, _) =>
-                    _fadePage(SettingsScreen()),
+                pageBuilder: (_, _) => _fadePage(SettingsScreen()),
               ),
             ],
           ),
@@ -265,14 +264,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/reception',
             name: 'reception-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(ReceptionDashboardScreen()),
+            pageBuilder: (_, _) => _fadePage(ReceptionDashboardScreen()),
             routes: [
               GoRoute(
                 path: 'queue',
                 name: 'queue-management',
-                pageBuilder: (_, _) =>
-                    _fadePage(QueueManagementScreen()),
+                pageBuilder: (_, _) => _fadePage(QueueManagementScreen()),
               ),
             ],
           ),
@@ -281,16 +278,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/cashier',
             name: 'cashier-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(CashierDashboardScreen()),
+            pageBuilder: (_, _) => _fadePage(CashierDashboardScreen()),
           ),
 
-          // Analytics
+          // Analytics (Admin)
           GoRoute(
             path: '/analytics',
             name: 'analytics-dashboard',
-            pageBuilder: (_, _) =>
-                _fadePage(AnalyticsScreen()),
+            pageBuilder: (_, _) => _fadePage(AnalyticsScreen()),
           ),
         ],
       ),
@@ -311,15 +306,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'patient-chat',
         pageBuilder: (context, state) {
           final doctorId = state.pathParameters['doctorId']!;
-          final doctorName = state.uri.queryParameters['doctorName'] ?? 'Doctor';
-          final specialty = state.uri.queryParameters['specialty'] ?? 'General Practice';
+          final doctorName =
+              state.uri.queryParameters['doctorName'] ?? 'Doctor';
+          final specialty =
+              state.uri.queryParameters['specialty'] ?? 'General Practice';
           final avatarUrl = state.uri.queryParameters['avatarUrl'];
-          return _fadePage(PatientChatScreen(
-            doctorId: doctorId,
-            doctorName: doctorName,
-            specialty: specialty,
-            avatarUrl: avatarUrl,
-          ));
+          return _fadePage(
+            PatientChatScreen(
+              doctorId: doctorId,
+              doctorName: doctorName,
+              specialty: specialty,
+              avatarUrl: avatarUrl,
+            ),
+          );
         },
       ),
       GoRoute(
@@ -346,6 +345,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/patient/cbt/daily-checkin',
         name: 'daily-checkin',
         builder: (_, _) => const DailyCheckinScreen(),
+      ),
+      GoRoute(
+        path: '/patient/cbt/exercise-details',
+        name: 'exercise-details',
+        builder: (context, state) {
+          final exercise = state.extra as CbtExerciseEntity;
+          return CbtExerciseDetailsScreen(exercise: exercise);
+        },
       ),
       GoRoute(
         path: '/patient/notifications',
