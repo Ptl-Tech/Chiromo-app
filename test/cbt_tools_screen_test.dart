@@ -24,7 +24,15 @@ void main() {
     );
 
     final router = GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, _) => const CbtToolsScreen())],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const CbtToolsScreen()),
+        GoRoute(
+          path: '/patient/cbt/exercise-details',
+          builder: (_, state) => CbtExerciseDetailsScreen(
+            exercise: state.extra as CbtExerciseEntity,
+          ),
+        ),
+      ],
     );
 
     await tester.pumpWidget(
@@ -38,13 +46,10 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(InkWell).first);
+    await tester.tap(find.text('DETAILS').first);
     await tester.pumpAndSettle();
 
-    // Verify dialog opened with Close button
-    expect(find.text('Close'), findsOneWidget);
-
-    // Verify exercise details are displayed
+    // Verify exercise details are displayed on the details screen
     expect(find.textContaining('Public speaking'), findsWidgets);
     expect(find.textContaining('Exposure'), findsWidgets);
   });
