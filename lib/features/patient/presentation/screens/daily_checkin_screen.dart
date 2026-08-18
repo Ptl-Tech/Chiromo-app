@@ -48,7 +48,7 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
       showBack: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

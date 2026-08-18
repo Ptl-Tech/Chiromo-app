@@ -38,7 +38,7 @@ class _BehavioralActivationScreenState
       showBack: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
