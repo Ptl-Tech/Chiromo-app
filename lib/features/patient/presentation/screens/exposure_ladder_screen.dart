@@ -603,168 +603,186 @@ class _ExposureLadderScreenState extends ConsumerState<ExposureLadderScreen> {
     return AppScaffold(
       title: 'Exposure Ladder',
       showBack: true,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Template Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    template['icon'] as String,
-                    style: const TextStyle(fontSize: 40),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Template Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFE8F5E9).withValues(alpha: 0.8),
+                      const Color(0xFFC8E6C9).withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFA5D6A7).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF81C784).withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      template['icon'] as String,
+                      style: const TextStyle(fontSize: 40),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            template['title'] as String,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Complete steps at your own pace',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => setState(() => _selectedTemplate = null),
+                      child: const Icon(Icons.edit, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Progress Overview
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ChiromoColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
                       children: [
                         Text(
-                          template['title'] as String,
-                          style: theme.textTheme.titleMedium?.copyWith(
+                          '${_currentStep.round()}',
+                          style: TextStyle(
+                            fontSize: 24,
                             fontWeight: FontWeight.w700,
+                            color: ChiromoColors.primary,
                           ),
                         ),
                         const SizedBox(height: 4),
+                        Text('Step', style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: ChiromoColors.primary.withValues(alpha: 0.2),
+                    ),
+                    Column(
+                      children: [
                         Text(
-                          'Complete steps at your own pace',
+                          '${steps.length}',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
                             color: ChiromoColors.textSecondary,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text('Total', style: theme.textTheme.bodySmall),
                       ],
                     ),
-                  ),
-                  InkWell(
-                    onTap: () => setState(() => _selectedTemplate = null),
-                    child: const Icon(Icons.edit, size: 20),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Progress Overview
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: ChiromoColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        '${_currentStep.round()}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: ChiromoColors.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text('Step', style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                  Container(
-                    height: 40,
-                    width: 1,
-                    color: ChiromoColors.primary.withValues(alpha: 0.2),
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        '${steps.length}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: ChiromoColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text('Total', style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            // Steps List
-            Text(
-              'Your Exposure Hierarchy',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            ...List.generate(steps.length, (index) {
-              final step = steps[index];
-              final isCompleted = index < _currentStep;
-              final isCurrent = index == _currentStep.toInt();
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildStepCard(step, isCompleted, isCurrent, theme),
-              );
-            }),
-
-            const SizedBox(height: 24),
-
-            // Share & Save
-            SwitchListTile(
-              title: const Text('Share with your therapist'),
-              subtitle: const Text('They can provide guidance on each step'),
-              value: _isShared,
-              onChanged: (v) => setState(() => _isShared = v),
-              activeThumbColor: ChiromoColors.primary,
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                onPressed: _isSaving ? null : _save,
-                style: FilledButton.styleFrom(
-                  backgroundColor: ChiromoColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  ],
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : const Text(
-                        'Save Ladder',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
-            ),
-          ],
+              const SizedBox(height: 28),
+
+              // Steps List
+              Text(
+                'Your Exposure Hierarchy',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              ...List.generate(steps.length, (index) {
+                final step = steps[index];
+                final isCompleted = index < _currentStep;
+                final isCurrent = index == _currentStep.toInt();
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildStepCard(step, isCompleted, isCurrent, theme),
+                );
+              }),
+
+              const SizedBox(height: 24),
+
+              // Share & Save
+              SwitchListTile(
+                title: const Text('Share with your therapist'),
+                subtitle: const Text('They can provide guidance on each step'),
+                value: _isShared,
+                onChanged: (v) => setState(() => _isShared = v),
+                activeThumbColor: ChiromoColors.primary,
+                contentPadding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ChiromoColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text(
+                          'Save Ladder',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

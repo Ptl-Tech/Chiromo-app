@@ -39,137 +39,138 @@ class _BehavioralActivationScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFFFF8F0).withValues(alpha: 0.8),
-                      const Color(0xFFFFEFD5).withValues(alpha: 0.6),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFFFF8F0).withValues(alpha: 0.8),
+                        const Color(0xFFFFEFD5).withValues(alpha: 0.6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFFFD6A5).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFB366).withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFFFD6A5).withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFB366).withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/quick_actions/log_activity.png',
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Behavioral Activation',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Schedule activities and build healthy routines to improve mood.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: ChiromoColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              _buildTextField(
-                controller: _activityCtrl,
-                label: 'Activity',
-                hint: 'What did you do? (e.g., Morning walk in the park)',
-                maxLines: 2,
-              ),
-              const SizedBox(height: 24),
-
-              SliderNumberInput(
-                label: 'Mood Lift (Points)',
-                value: _moodLift,
-                min: 0,
-                max: 10,
-                divisions: 10,
-                activeColor: ChiromoColors.success,
-                onChanged: (v) => setState(() => _moodLift = v),
-              ),
-              const SizedBox(height: 24),
-
-              // Share toggle
-              SwitchListTile(
-                title: const Text('Share with your therapist'),
-                subtitle: const Text(
-                  'Your therapist can review and provide feedback',
-                ),
-                value: _isShared,
-                onChanged: (v) => setState(() => _isShared = v),
-                activeThumbColor: ChiromoColors.primary,
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 24),
-
-              // Save button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _save,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: ChiromoColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : const Text(
-                          'Save Activity',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          'assets/images/quick_actions/log_activity.png',
+                          width: 52,
+                          height: 52,
+                          fit: BoxFit.cover,
                         ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Behavioral Activation',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Schedule activities and build healthy routines to improve mood.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ChiromoColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 28),
+
+                _buildTextField(
+                  controller: _activityCtrl,
+                  label: 'Activity',
+                  hint: 'What did you do? (e.g., Morning walk in the park)',
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 24),
+
+                SliderNumberInput(
+                  label: 'Mood Lift (Points)',
+                  value: _moodLift,
+                  min: 0,
+                  max: 10,
+                  divisions: 10,
+                  activeColor: ChiromoColors.success,
+                  onChanged: (v) => setState(() => _moodLift = v),
+                ),
+                const SizedBox(height: 24),
+
+                // Share toggle
+                SwitchListTile(
+                  title: const Text('Share with your therapist'),
+                  subtitle: const Text(
+                    'Your therapist can review and provide feedback',
+                  ),
+                  value: _isShared,
+                  onChanged: (v) => setState(() => _isShared = v),
+                  activeThumbColor: ChiromoColors.primary,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 24),
+
+                // Save button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: _isSaving ? null : _save,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ChiromoColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Save Activity',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
