@@ -36,74 +36,72 @@ class PatientAnalyticsScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(patientAnalyticsProvider),
         ),
         data: (analytics) {
-          return SingleChildScrollView(
+          return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Health Stats Cards
-                _buildHealthStatsCards(context, analytics.healthStats),
-                const SizedBox(height: 32),
+            children: [
+              // Health Stats Cards
+              _buildHealthStatsCards(context, analytics.healthStats),
+              const SizedBox(height: 32),
 
-                // Mood History Chart
-                _buildSectionHeader(
-                  '😊 Mood Tracker',
-                  'Your mood over the past 2 weeks',
-                ),
-                const SizedBox(height: 16),
-                _buildMoodChart(context, analytics.moodHistory),
-                const SizedBox(height: 32),
+              // Mood History Chart
+              _buildSectionHeader(
+                '😊 Mood Tracker',
+                'Your mood over the past 2 weeks',
+              ),
+              const SizedBox(height: 16),
+              _buildMoodChart(context, analytics.moodHistory),
+              const SizedBox(height: 32),
 
-                // Appointment History
-                _buildSectionHeader(
-                  '📅 Appointment History',
-                  'Appointments by month',
-                ),
-                const SizedBox(height: 16),
-                _buildAppointmentChart(context, analytics.appointmentStats),
-                const SizedBox(height: 32),
+              // Appointment History
+              _buildSectionHeader(
+                '📅 Appointment History',
+                'Appointments by month',
+              ),
+              const SizedBox(height: 16),
+              _buildAppointmentChart(context, analytics.appointmentStats),
+              const SizedBox(height: 32),
 
-                // Two Column: Medications & Sleep
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionHeader(
-                            '💊 Medication Adherence',
-                            'Your adherence %',
-                          ),
-                          const SizedBox(height: 16),
-                          _buildMedicationList(context, analytics.medications),
-                        ],
-                      ),
+              // Two Column: Medications & Sleep
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                          '💊 Medication Adherence',
+                          'Your adherence %',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildMedicationList(context, analytics.medications),
+                      ],
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionHeader(
-                            '😴 Sleep Tracker',
-                            'Recent sleep records',
-                          ),
-                          const SizedBox(height: 16),
-                          _buildSleepList(context, analytics.sleepRecords),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                          '😴 Sleep Tracker',
+                          'Recent sleep records',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSleepList(context, analytics.sleepRecords),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
 
-                // Exercise Records
-                _buildSectionHeader('🏃 Exercise Activity', 'Your workouts'),
-                const SizedBox(height: 16),
-                _buildExerciseList(context, analytics.exercises),
-                const SizedBox(height: 32),
-              ],
-            ),
+              // Exercise Records
+              _buildSectionHeader('🏃 Exercise Activity', 'Your workouts'),
+              const SizedBox(height: 16),
+              _buildExerciseList(context, analytics.exercises),
+              const SizedBox(height: 32),
+            ],
           );
         },
       ),
