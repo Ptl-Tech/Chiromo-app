@@ -52,373 +52,370 @@ class EmergencyScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Emergency & Crisis',
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Immediate Danger Card
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFFFE4E1).withValues(alpha: 0.6),
-                      const Color(0xFFFFE4E4).withValues(alpha: 0.4),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFFFFB3BA).withValues(alpha: 0.25),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B7A).withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Immediate Danger Card
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFFFE4E1).withValues(alpha: 0.6),
+                    const Color(0xFFFFE4E4).withValues(alpha: 0.4),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/icons/3d/siren.png',
-                        width: 56,
-                        height: 56,
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Text(
-                          'If you or someone else is in immediate danger, please go to the nearest emergency room or call emergency services immediately.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: const Color(
-                              0xFFD32F2F,
-                            ).withValues(alpha: 0.85),
-                            fontWeight: FontWeight.w700,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: const Color(0xFFFFB3BA).withValues(alpha: 0.25),
+                  width: 1.5,
                 ),
-              ),
-              const SizedBox(height: 36),
-
-              // Immediate Help Section
-              Text(
-                'Immediate Help',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: ChiromoColors.textPrimary,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              hotlinesAsync.when(
-                data: (hotlines) {
-                  if (hotlines.isEmpty) {
-                    return const Text('No emergency hotlines available.');
-                  }
-                  return Column(
-                    children: hotlines
-                        .map(
-                          (h) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildEmergencyContactCard(
-                              context: context,
-                              title: h.title,
-                              subtitle: h.subtitle,
-                              phoneNumber: h.phoneNumber,
-                              icon: _iconFromName(h.iconName),
-                              color: _colorFromHex(h.colorHex),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Text(
-                  'Error loading hotlines: $e',
-                  style: TextStyle(color: ChiromoColors.error),
-                ),
-              ),
-
-              const SizedBox(height: 36),
-
-              // Personal Safety Plan
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'My Safety Plan',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: ChiromoColors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: () =>
-                        context.push('/patient/emergency/safety-plan'),
-                    icon: const Icon(Icons.edit_rounded, size: 16),
-                    label: const Text('Edit'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ChiromoColors.primary.withValues(
-                        alpha: 0.1,
-                      ),
-                      foregroundColor: ChiromoColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF6B7A).withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              safetyPlanAsync.when(
-                data: (plan) {
-                  bool hasData =
-                      plan != null &&
-                      ((plan.warningSigns?.isNotEmpty ?? false) ||
-                          (plan.copingStrategies?.isNotEmpty ?? false) ||
-                          (plan.reasonsToLive?.isNotEmpty ?? false) ||
-                          (plan.professionalContacts?.isNotEmpty ?? false));
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ChiromoColors.primary.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/icons/3d/siren.png',
+                      width: 56,
+                      height: 56,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        'If you or someone else is in immediate danger, please go to the nearest emergency room or call emergency services immediately.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(
+                            0xFFD32F2F,
+                          ).withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
                         ),
-                      ],
-                      border: Border.all(
-                        color: ChiromoColors.primary.withValues(alpha: 0.15),
-                        width: 1,
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 36),
+
+            // Immediate Help Section
+            Text(
+              'Immediate Help',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: ChiromoColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            hotlinesAsync.when(
+              data: (hotlines) {
+                if (hotlines.isEmpty) {
+                  return const Text('No emergency hotlines available.');
+                }
+                return Column(
+                  children: hotlines
+                      .map(
+                        (h) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildEmergencyContactCard(
+                            context: context,
+                            title: h.title,
+                            subtitle: h.subtitle,
+                            phoneNumber: h.phoneNumber,
+                            icon: _iconFromName(h.iconName),
+                            color: _colorFromHex(h.colorHex),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Text(
+                'Error loading hotlines: $e',
+                style: TextStyle(color: ChiromoColors.error),
+              ),
+            ),
+
+            const SizedBox(height: 36),
+
+            // Personal Safety Plan
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'My Safety Plan',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ChiromoColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      context.push('/patient/emergency/safety-plan'),
+                  icon: const Icon(Icons.edit_rounded, size: 16),
+                  label: const Text('Edit'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ChiromoColors.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                    foregroundColor: ChiromoColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            safetyPlanAsync.when(
+              data: (plan) {
+                bool hasData =
+                    plan != null &&
+                    ((plan.warningSigns?.isNotEmpty ?? false) ||
+                        (plan.copingStrategies?.isNotEmpty ?? false) ||
+                        (plan.reasonsToLive?.isNotEmpty ?? false) ||
+                        (plan.professionalContacts?.isNotEmpty ?? false));
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ChiromoColors.primary.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: ChiromoColors.primary.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: hasData
+                                  ? [
+                                      ChiromoColors.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      Colors.white,
+                                    ]
+                                  : [
+                                      Colors.grey.withValues(alpha: 0.1),
+                                      Colors.white,
+                                    ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: hasData
-                                    ? [
-                                        ChiromoColors.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        Colors.white,
-                                      ]
-                                    : [
-                                        Colors.grey.withValues(alpha: 0.1),
-                                        Colors.white,
-                                      ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: hasData
+                                      ? ChiromoColors.primary.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : Colors.grey.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  hasData
+                                      ? Icons.shield_rounded
+                                      : Icons.shield_outlined,
+                                  color: hasData
+                                      ? ChiromoColors.primary
+                                      : Colors.grey,
+                                  size: 24,
+                                ),
                               ),
-                            ),
-                            child: Row(
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  hasData
+                                      ? 'Your safety plan is active and ready.'
+                                      : 'Your safety plan is empty. Click Edit to create one.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: hasData
+                                        ? ChiromoColors.textPrimary
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (hasData)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: hasData
-                                        ? ChiromoColors.primary.withValues(
-                                            alpha: 0.15,
-                                          )
-                                        : Colors.grey.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
+                                const Divider(height: 24, thickness: 1),
+                                if (plan.warningSigns?.isNotEmpty ?? false)
+                                  _buildPlanDetailRow(
+                                    Icons.warning_amber_rounded,
+                                    'Warning Signs',
+                                    plan.warningSigns!,
                                   ),
-                                  child: Icon(
-                                    hasData
-                                        ? Icons.shield_rounded
-                                        : Icons.shield_outlined,
-                                    color: hasData
-                                        ? ChiromoColors.primary
-                                        : Colors.grey,
-                                    size: 24,
+                                if (plan.copingStrategies?.isNotEmpty ?? false)
+                                  _buildPlanDetailRow(
+                                    Icons.self_improvement_rounded,
+                                    'Coping Strategies',
+                                    plan.copingStrategies!,
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    hasData
-                                        ? 'Your safety plan is active and ready.'
-                                        : 'Your safety plan is empty. Click Edit to create one.',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: hasData
-                                          ? ChiromoColors.textPrimary
-                                          : Colors.grey.shade600,
-                                    ),
+                                if (plan.reasonsToLive?.isNotEmpty ?? false)
+                                  _buildPlanDetailRow(
+                                    Icons.favorite_rounded,
+                                    'Reasons to Live',
+                                    plan.reasonsToLive!,
+                                    iconColor: Colors.redAccent,
                                   ),
-                                ),
+                                if (plan.professionalContacts?.isNotEmpty ??
+                                    false)
+                                  _buildPlanDetailRow(
+                                    Icons.medical_services_rounded,
+                                    'Professional Contacts',
+                                    plan.professionalContacts!,
+                                    iconColor: Colors.blueAccent,
+                                  ),
                               ],
                             ),
                           ),
-                          if (hasData)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Divider(height: 24, thickness: 1),
-                                  if (plan.warningSigns?.isNotEmpty ?? false)
-                                    _buildPlanDetailRow(
-                                      Icons.warning_amber_rounded,
-                                      'Warning Signs',
-                                      plan.warningSigns!,
-                                    ),
-                                  if (plan.copingStrategies?.isNotEmpty ??
-                                      false)
-                                    _buildPlanDetailRow(
-                                      Icons.self_improvement_rounded,
-                                      'Coping Strategies',
-                                      plan.copingStrategies!,
-                                    ),
-                                  if (plan.reasonsToLive?.isNotEmpty ?? false)
-                                    _buildPlanDetailRow(
-                                      Icons.favorite_rounded,
-                                      'Reasons to Live',
-                                      plan.reasonsToLive!,
-                                      iconColor: Colors.redAccent,
-                                    ),
-                                  if (plan.professionalContacts?.isNotEmpty ??
-                                      false)
-                                    _buildPlanDetailRow(
-                                      Icons.medical_services_rounded,
-                                      'Professional Contacts',
-                                      plan.professionalContacts!,
-                                      iconColor: Colors.blueAccent,
-                                    ),
-                                ],
-                              ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Text('Error loading safety plan: $e'),
+            ),
+            const SizedBox(height: 36),
+
+            // Emergency Contacts
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Personal Contacts',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ChiromoColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push('/patient/emergency/contact'),
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Add'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ChiromoColors.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                    foregroundColor: ChiromoColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            emergencyContactsAsync.when(
+              data: (contacts) {
+                if (contacts.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.2),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.contact_phone_outlined,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No personal emergency contacts added yet.',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
                             ),
+                          ),
                         ],
                       ),
                     ),
                   );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Text('Error loading safety plan: $e'),
-              ),
-              const SizedBox(height: 36),
+                }
 
-              // Emergency Contacts
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Personal Contacts',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: ChiromoColors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: () => context.push('/patient/emergency/contact'),
-                    icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('Add'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ChiromoColors.primary.withValues(
-                        alpha: 0.1,
-                      ),
-                      foregroundColor: ChiromoColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              emergencyContactsAsync.when(
-                data: (contacts) {
-                  if (contacts.isEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.2),
-                          width: 2,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.contact_phone_outlined,
-                              size: 48,
-                              color: Colors.grey,
+                return Column(
+                  children: contacts
+                      .map(
+                        (c) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap: () => context.push(
+                              '/patient/emergency/contact',
+                              extra: c,
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              'No personal emergency contacts added yet.',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: contacts
-                        .map(
-                          (c) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: InkWell(
-                              onTap: () => context.push(
-                                '/patient/emergency/contact',
-                                extra: c,
-                              ),
-                              child: _buildEmergencyContactCard(
-                                context: context,
-                                title: c.name,
-                                subtitle: c.relationship ?? 'Personal Contact',
-                                phoneNumber: c.phoneNumber,
-                                icon: Icons.person_rounded,
-                                color: ChiromoColors.primary,
-                                isPersonal: true,
-                              ),
+                            child: _buildEmergencyContactCard(
+                              context: context,
+                              title: c.name,
+                              subtitle: c.relationship ?? 'Personal Contact',
+                              phoneNumber: c.phoneNumber,
+                              icon: Icons.person_rounded,
+                              color: ChiromoColors.primary,
+                              isPersonal: true,
                             ),
                           ),
-                        )
-                        .toList(),
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Text('Error loading contacts: $e'),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Text('Error loading contacts: $e'),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );

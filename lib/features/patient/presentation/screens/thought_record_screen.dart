@@ -46,187 +46,185 @@ class _ThoughtRecordScreenState extends ConsumerState<ThoughtRecordScreen> {
     return AppScaffold(
       title: 'Thought Record',
       showBack: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFE0F2F1).withValues(alpha: 0.8),
-                        const Color(0xFFB2DFDB).withValues(alpha: 0.6),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF80CBC4).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4DB6AC).withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                      const Color(0xFFB2DFDB).withValues(alpha: 0.6),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/images/cbt_tools/thought_record.png',
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Thought Record',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Challenge negative thoughts and build cognitive flexibility',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: ChiromoColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF80CBC4).withValues(alpha: 0.3),
+                    width: 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4DB6AC).withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 28),
-
-                _buildTextField(
-                  controller: _situationCtrl,
-                  label: 'Situation',
-                  hint: 'What happened? Where were you?',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _autoThoughtCtrl,
-                  label: 'Automatic Thought',
-                  hint: 'What went through your mind?',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _emotionCtrl,
-                  label: 'Emotion',
-                  hint: 'What did you feel? (e.g., anxious, sad, angry)',
-                ),
-                const SizedBox(height: 24),
-
-                SliderNumberInput(
-                  label: 'Anxiety Level Before',
-                  value: _anxietyBefore,
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  activeColor: _anxietyColor(_anxietyBefore),
-                  onChanged: (v) => setState(() => _anxietyBefore = v),
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _evidenceForCtrl,
-                  label: 'Evidence For This Thought',
-                  hint: 'What facts support this thought?',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _evidenceAgainstCtrl,
-                  label: 'Evidence Against This Thought',
-                  hint: 'What facts contradict this thought?',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _balancedThoughtCtrl,
-                  label: 'Balanced Thought',
-                  hint: 'What is a more balanced way of thinking?',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 24),
-
-                SliderNumberInput(
-                  label: 'Anxiety Level After',
-                  value: _anxietyAfter,
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  activeColor: _anxietyColor(_anxietyAfter),
-                  onChanged: (v) => setState(() => _anxietyAfter = v),
-                ),
-                const SizedBox(height: 16),
-
-                // Share toggle
-                SwitchListTile(
-                  title: const Text('Share with your therapist'),
-                  subtitle: const Text(
-                    'Your therapist can review and provide feedback',
-                  ),
-                  value: _isShared,
-                  onChanged: (v) => setState(() => _isShared = v),
-                  activeThumbColor: ChiromoColors.primary,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                const SizedBox(height: 24),
-
-                // Save button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: _isSaving ? null : _save,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ChiromoColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/cbt_tools/thought_record.png',
+                        width: 52,
+                        height: 52,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : const Text(
-                            'Save Thought Record',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Thought Record',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                  ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Challenge negative thoughts and build cognitive flexibility',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+              const SizedBox(height: 28),
+
+              _buildTextField(
+                controller: _situationCtrl,
+                label: 'Situation',
+                hint: 'What happened? Where were you?',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _autoThoughtCtrl,
+                label: 'Automatic Thought',
+                hint: 'What went through your mind?',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _emotionCtrl,
+                label: 'Emotion',
+                hint: 'What did you feel? (e.g., anxious, sad, angry)',
+              ),
+              const SizedBox(height: 24),
+
+              SliderNumberInput(
+                label: 'Anxiety Level Before',
+                value: _anxietyBefore,
+                min: 0,
+                max: 10,
+                divisions: 10,
+                activeColor: _anxietyColor(_anxietyBefore),
+                onChanged: (v) => setState(() => _anxietyBefore = v),
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _evidenceForCtrl,
+                label: 'Evidence For This Thought',
+                hint: 'What facts support this thought?',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _evidenceAgainstCtrl,
+                label: 'Evidence Against This Thought',
+                hint: 'What facts contradict this thought?',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _balancedThoughtCtrl,
+                label: 'Balanced Thought',
+                hint: 'What is a more balanced way of thinking?',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+
+              SliderNumberInput(
+                label: 'Anxiety Level After',
+                value: _anxietyAfter,
+                min: 0,
+                max: 10,
+                divisions: 10,
+                activeColor: _anxietyColor(_anxietyAfter),
+                onChanged: (v) => setState(() => _anxietyAfter = v),
+              ),
+              const SizedBox(height: 16),
+
+              // Share toggle
+              SwitchListTile(
+                title: const Text('Share with your therapist'),
+                subtitle: const Text(
+                  'Your therapist can review and provide feedback',
+                ),
+                value: _isShared,
+                onChanged: (v) => setState(() => _isShared = v),
+                activeThumbColor: ChiromoColors.primary,
+                contentPadding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 24),
+
+              // Save button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ChiromoColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text(
+                          'Save Thought Record',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
