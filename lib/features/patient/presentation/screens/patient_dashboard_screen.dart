@@ -73,7 +73,7 @@ class PatientDashboardScreen extends ConsumerWidget {
           children: [
             // Fixed Header (Does not scroll)
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               child: Row(
                 children: [
                   CircleAvatar(
