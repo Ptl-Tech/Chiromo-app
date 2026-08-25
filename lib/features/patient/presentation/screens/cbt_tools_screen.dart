@@ -17,224 +17,233 @@ class CbtToolsScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'CBT Tools',
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ──
-              Row(
-                children: [
-                  Text(
-                    'CBT Tools',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: ChiromoColors.textPrimary,
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──
+            Row(
+              children: [
+                Text(
+                  'CBT Tools',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ChiromoColors.textPrimary,
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 16,
-                          color: Colors.amber.shade700,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Personalized for you',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.amber.shade800,
-                          ),
-                        ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFFFF8F0).withValues(alpha: 0.7),
+                        const Color(0xFFFFEFD5).withValues(alpha: 0.5),
                       ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFFFD6A5).withValues(alpha: 0.25),
+                      width: 1,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Evidence-based CBT exercises to support your mental health journey.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: ChiromoColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // ── New Exposure Ladder Banner ──
-              _BannerCard(
-                imagePath: 'assets/images/cbt_tools/exposure_ladder.png',
-                icon: Icons.format_list_numbered_rounded,
-                iconBg: const Color(0xFFE3F2FD),
-                iconColor: ChiromoColors.primary,
-                title: 'New Exposure Ladder',
-                subtitle: 'Build a hierarchy of fears to face gradually',
-                onTap: () => context.push('/patient/cbt/exposure-ladder'),
-              ),
-              const SizedBox(height: 28),
-
-              // ── CBT Exercises ──
-              Text(
-                'CBT Exercises',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: ChiromoColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              _ExerciseCard(
-                imagePath: 'assets/images/cbt_tools/thought_record.png',
-                icon: Icons.psychology_outlined,
-                iconBg: const Color(0xFFE0F2F1),
-                iconColor: const Color(0xFF00897B),
-                title: 'Thought Record',
-                subtitle:
-                    'Challenge negative thoughts & improve cognitive flexibility',
-                onTap: () => context.push('/patient/cbt/thought-record'),
-              ),
-              const SizedBox(height: 12),
-              _ExerciseCard(
-                imagePath: 'assets/images/quick_actions/log_activity.png',
-                icon: Icons.check_box_outlined,
-                iconBg: const Color(0xFFFFF3E0),
-                iconColor: const Color(0xFFEF6C00),
-                title: 'Behavioral Activation',
-                subtitle: 'Schedule activities and build healthy routines',
-                onTap: () => context.push('/patient/cbt/behavioral-activation'),
-              ),
-              const SizedBox(height: 12),
-              _ExerciseCard(
-                imagePath: 'assets/images/cbt_tools/exposure_ladder.png',
-                icon: Icons.trending_up_rounded,
-                iconBg: const Color(0xFFE8F5E9),
-                iconColor: const Color(0xFF2E7D32),
-                title: 'Exposure Ladder',
-                subtitle: 'Face fears gradually with a guided hierarchy',
-                onTap: () => context.push('/patient/cbt/exposure-ladder'),
-              ),
-              const SizedBox(height: 12),
-              _ExerciseCard(
-                imagePath: 'assets/images/quick_actions/cbt_tools.png',
-                icon: Icons.event_note_rounded,
-                iconBg: const Color(0xFFE3F2FD),
-                iconColor: ChiromoColors.primary,
-                title: 'Daily Check-in',
-                subtitle: 'Track your mood, symptoms, and daily wins',
-                onTap: () => context.push('/patient/cbt/daily-checkin'),
-              ),
-              const SizedBox(height: 32),
-
-              // ── Recent Progress ──
-              Row(
-                children: [
-                  Text(
-                    'Recent Progress',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: ChiromoColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'VIEW ALL',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: ChiromoColors.primary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              recentProgress.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(
-                  child: Column(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.cloud_off_rounded,
-                        size: 48,
-                        color: ChiromoColors.textTertiary,
+                        Icons.star_rounded,
+                        size: 16,
+                        color: const Color(0xFFC17817).withValues(alpha: 0.8),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(width: 4),
                       Text(
-                        'No progress entries yet.\nComplete a CBT exercise to see your progress here!',
-                        textAlign: TextAlign.center,
+                        'Personalized for you',
                         style: TextStyle(
-                          color: ChiromoColors.textSecondary,
-                          fontSize: 14,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(
+                            0xFFC17817,
+                          ).withValues(alpha: 0.85),
                         ),
                       ),
                     ],
                   ),
                 ),
-                data: (exercises) {
-                  if (exercises.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.self_improvement_rounded,
-                              size: 56,
-                              color: ChiromoColors.textTertiary,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No progress entries yet',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: ChiromoColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Complete a CBT exercise to track your journey',
-                              style: TextStyle(
-                                color: ChiromoColors.textTertiary,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: exercises
-                        .map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ProgressCard(exercise: e),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Evidence-based CBT exercises to support your mental health journey.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: ChiromoColors.textSecondary,
+                height: 1.4,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            // ── New Exposure Ladder Banner ──
+            _BannerCard(
+              imagePath: 'assets/images/cbt_tools/exposure_ladder.png',
+              icon: Icons.format_list_numbered_rounded,
+              iconBg: const Color(0xFFE3F2FD),
+              iconColor: ChiromoColors.primary,
+              title: 'New Exposure Ladder',
+              subtitle: 'Build a hierarchy of fears to face gradually',
+              onTap: () => context.push('/patient/cbt/exposure-ladder'),
+            ),
+            const SizedBox(height: 28),
+
+            // ── CBT Exercises ──
+            Text(
+              'CBT Exercises',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: ChiromoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            _ExerciseCard(
+              imagePath: 'assets/images/cbt_tools/thought_record.png',
+              icon: Icons.psychology_outlined,
+              iconBg: const Color(0xFFE0F2F1),
+              iconColor: const Color(0xFF00897B),
+              title: 'Thought Record',
+              subtitle:
+                  'Challenge negative thoughts & improve cognitive flexibility',
+              onTap: () => context.push('/patient/cbt/thought-record'),
+            ),
+            const SizedBox(height: 12),
+            _ExerciseCard(
+              imagePath: 'assets/images/quick_actions/log_activity.png',
+              icon: Icons.check_box_outlined,
+              iconBg: const Color(0xFFFFF3E0),
+              iconColor: const Color(0xFFEF6C00),
+              title: 'Behavioral Activation',
+              subtitle: 'Schedule activities and build healthy routines',
+              onTap: () => context.push('/patient/cbt/behavioral-activation'),
+            ),
+            const SizedBox(height: 12),
+            _ExerciseCard(
+              imagePath: 'assets/images/cbt_tools/exposure_ladder.png',
+              icon: Icons.trending_up_rounded,
+              iconBg: const Color(0xFFE8F5E9),
+              iconColor: const Color(0xFF2E7D32),
+              title: 'Exposure Ladder',
+              subtitle: 'Face fears gradually with a guided hierarchy',
+              onTap: () => context.push('/patient/cbt/exposure-ladder'),
+            ),
+            const SizedBox(height: 12),
+            _ExerciseCard(
+              imagePath: 'assets/images/quick_actions/cbt_tools.png',
+              icon: Icons.event_note_rounded,
+              iconBg: const Color(0xFFE3F2FD),
+              iconColor: ChiromoColors.primary,
+              title: 'Daily Check-in',
+              subtitle: 'Track your mood, symptoms, and daily wins',
+              onTap: () => context.push('/patient/cbt/daily-checkin'),
+            ),
+            const SizedBox(height: 32),
+
+            // ── Recent Progress ──
+            Row(
+              children: [
+                Text(
+                  'Recent Progress',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: ChiromoColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                    'VIEW ALL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: ChiromoColors.primary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            recentProgress.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.cloud_off_rounded,
+                      size: 48,
+                      color: ChiromoColors.textTertiary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No progress entries yet.\nComplete a CBT exercise to see your progress here!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ChiromoColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              data: (exercises) {
+                if (exercises.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.self_improvement_rounded,
+                            size: 56,
+                            color: ChiromoColors.textTertiary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No progress entries yet',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Complete a CBT exercise to track your journey',
+                            style: TextStyle(
+                              color: ChiromoColors.textTertiary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: exercises
+                      .map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ProgressCard(exercise: e),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -267,58 +276,98 @@ class _BannerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      elevation: 0,
-      borderRadius: 16,
+      elevation: 0.5,
+      borderRadius: 20,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              imagePath != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        imagePath!,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: iconBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 28),
-                    ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: ChiromoColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              Icon(Icons.chevron_right, color: ChiromoColors.textTertiary),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                imagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Image.asset(
+                            imagePath!,
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: iconBg.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: iconColor.withValues(alpha: 0.15),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: iconColor.withValues(alpha: 0.95),
+                          size: 28,
+                        ),
+                      ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: ChiromoColors.textSecondary.withValues(
+                            alpha: 0.85,
+                          ),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: ChiromoColors.textTertiary.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -348,43 +397,71 @@ class _ExerciseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 0.5,
+      shadowColor: Colors.grey.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: ChiromoColors.border.withValues(alpha: 0.6)),
+        side: BorderSide(
+          color: ChiromoColors.border.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: ExpansionTile(
         leading: imagePath != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  imagePath!,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                  child: Image.asset(
+                    imagePath!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               )
             : Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: iconBg,
+                  color: iconBg.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: iconColor.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(icon, color: iconColor, size: 26),
+                child: Icon(
+                  icon,
+                  color: iconColor.withValues(alpha: 0.9),
+                  size: 26,
+                ),
               ),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            fontSize: 13,
-            color: ChiromoColors.textSecondary,
-            height: 1.3,
+            fontSize: 12.5,
+            color: ChiromoColors.textSecondary.withValues(alpha: 0.8),
+            height: 1.4,
           ),
         ),
-        trailing: Icon(Icons.expand_more, color: ChiromoColors.textTertiary),
+        trailing: Icon(
+          Icons.expand_more,
+          color: ChiromoColors.textTertiary.withValues(alpha: 0.6),
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -47,7 +47,7 @@ class _ThoughtRecordScreenState extends ConsumerState<ThoughtRecordScreen> {
       title: 'Thought Record',
       showBack: true,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
         child: Form(
           key: _formKey,
           child: Column(
@@ -57,10 +57,26 @@ class _ThoughtRecordScreenState extends ConsumerState<ThoughtRecordScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                      const Color(0xFFB2DFDB).withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF80CBC4).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4DB6AC).withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [

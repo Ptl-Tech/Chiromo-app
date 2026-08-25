@@ -244,6 +244,11 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
         break;
 
       case CbtExerciseType.exposureLadder:
+        final fearText = (exercise.fear ?? '').trim();
+        final totalSteps = exercise.totalSteps ?? 0;
+        final currentStep = exercise.currentStep ?? 0;
+        final hasProgress = totalSteps > 0;
+
         widgets.addAll([
           _buildSectionTitle('Fear/Challenge'),
           Container(
@@ -252,10 +257,15 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
               color: ChiromoColors.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              exercise.fear ?? 'N/A',
-              style: const TextStyle(fontSize: 14, height: 1.6),
-            ),
+            child: fearText.isEmpty
+                ? const Text(
+                    'No fear or challenge added yet.',
+                    style: TextStyle(fontSize: 14, height: 1.6),
+                  )
+                : Text(
+                    fearText,
+                    style: const TextStyle(fontSize: 14, height: 1.6),
+                  ),
           ),
           const SizedBox(height: 20),
           _buildSectionTitle('Progress'),
@@ -265,42 +275,47 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
               color: ChiromoColors.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Step ${exercise.currentStep ?? 0} of ${exercise.totalSteps ?? 0}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+            child: hasProgress
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Step $currentStep of $totalSteps',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${(((currentStep) / (totalSteps == 0 ? 1 : totalSteps)) * 100).toStringAsFixed(0)}%',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      '${(((exercise.currentStep ?? 0) / (exercise.totalSteps ?? 1)) * 100).toStringAsFixed(0)}%',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: ChiromoColors.textSecondary,
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: totalSteps == 0 ? 0 : currentStep / totalSteps,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: const AlwaysStoppedAnimation(
+                            Colors.green,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value:
-                        (exercise.currentStep ?? 0) /
-                        (exercise.totalSteps ?? 1),
-                    minHeight: 8,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: const AlwaysStoppedAnimation(Colors.green),
+                    ],
+                  )
+                : const Text(
+                    'No progress yet. Complete your first step to start tracking.',
+                    style: TextStyle(fontSize: 14, height: 1.6),
                   ),
-                ),
-              ],
-            ),
           ),
         ]);
         break;

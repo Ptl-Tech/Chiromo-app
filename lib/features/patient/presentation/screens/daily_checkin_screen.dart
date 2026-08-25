@@ -47,7 +47,7 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
       title: 'Daily Check-in',
       showBack: true,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -55,10 +55,26 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFE3F2FD).withValues(alpha: 0.8),
+                    const Color(0xFFBBDEFB).withValues(alpha: 0.6),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF90CAF9).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF64B5F6).withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
