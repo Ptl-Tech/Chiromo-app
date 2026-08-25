@@ -40,6 +40,8 @@ class UserEntity {
   final String email;
   final String? fullName;
   final String? phone;
+  final String? gender;
+  final String? idNumber;
   final String? avatarUrl;
   final DateTime? dateOfBirth;
   final String? bio;
@@ -53,6 +55,8 @@ class UserEntity {
     required this.email,
     this.fullName,
     this.phone,
+    this.gender,
+    this.idNumber,
     this.avatarUrl,
     this.dateOfBirth,
     this.bio,

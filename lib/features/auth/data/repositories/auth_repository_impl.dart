@@ -39,6 +39,12 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       final token = res.data['token'] as String;
       await TokenService.saveToken(token);
+
+      // Fetch the canonical profile after storing the token. The login
+      // response can contain stale or reduced user details.
+      final currentUser = await getCurrentUser();
+      if (currentUser != null) return currentUser;
+
       return UserModel.fromJson(
         res.data['user'] as Map<String, dynamic>,
       ).toEntity();

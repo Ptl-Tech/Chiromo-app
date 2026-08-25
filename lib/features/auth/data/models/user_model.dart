@@ -9,6 +9,10 @@ class UserModel {
   final String? middleName;
   final String? lastName;
   final String? phoneNumber;
+  final String? gender;
+  final String? idNumber;
+  final DateTime? dateOfBirth;
+  final DateTime? dateRegistered;
   final bool emailVerified;
 
   const UserModel({
@@ -17,6 +21,10 @@ class UserModel {
     this.middleName,
     this.lastName,
     this.phoneNumber,
+    this.gender,
+    this.idNumber,
+    this.dateOfBirth,
+    this.dateRegistered,
     this.emailVerified = false,
   });
 
@@ -35,8 +43,17 @@ class UserModel {
       middleName: json['middleName'] as String?,
       lastName: json['lastName'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
+      gender: json['gender'] as String?,
+      idNumber: json['idNumber'] as String?,
+      dateOfBirth: _parseDate(json['dateOfBirth']),
+      dateRegistered: _parseDate(json['dateRegistered']),
       emailVerified: json['emailVerified'] as bool? ?? false,
     );
+  }
+
+  static DateTime? _parseDate(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 
   /// Convert to domain entity.
@@ -52,12 +69,14 @@ class UserModel {
       email: email,
       fullName: fullName,
       phone: phoneNumber,
+      gender: gender,
+      idNumber: idNumber,
       avatarUrl: null,
-      dateOfBirth: null,
+      dateOfBirth: dateOfBirth,
       bio: null,
       role: UserRole.patient,
       branchId: null,
-      createdAt: now,
+      createdAt: dateRegistered ?? now,
       updatedAt: now,
     );
   }
