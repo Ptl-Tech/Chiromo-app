@@ -66,12 +66,9 @@ class DoctorModel {
       createdAt: now,
       updatedAt: now,
       userProfile: UserModel(
-        id: json['Doctor_ID']?.toString() ?? '',
+        email: '', // not available from the doctors listing API yet
         firstName: firstName,
         lastName: lastName,
-        role: 'doctor',
-        createdAt: now,
-        updatedAt: now,
       ),
     );
   }

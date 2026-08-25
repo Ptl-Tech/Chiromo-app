@@ -39,6 +39,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fullName: _nameCtrl.text.trim(),
           phone: _phoneCtrl.text.trim(),
         );
+
+    // Business Central doesn't log the user in on registration — they need
+    // to verify their email and sign in separately.
+    if (!mounted) return;
+    final state = ref.read(authNotifierProvider);
+    if (!state.hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Account created! Please check your email to verify your account, then sign in.',
+          ),
+        ),
+      );
+      context.go('/login');
+    }
   }
 
   @override

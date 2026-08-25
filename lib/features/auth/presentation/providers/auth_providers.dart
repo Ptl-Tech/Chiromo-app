@@ -47,6 +47,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     }
   }
 
+  /// Registers the user with Business Central. Unlike Supabase, BC does not
+  /// log the user in on registration — they must verify their email and
+  /// sign in separately — so state returns to "logged out" on success.
   Future<void> signUpWithEmail({
     required String email,
     required String password,
@@ -55,13 +58,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repo.signUpWithEmail(
+      await _repo.signUpWithEmail(
         email: email,
         password: password,
         fullName: fullName,
         phone: phone,
       );
-      state = AsyncValue.data(user);
+      state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -87,11 +90,33 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     }
   }
 
+  /// Requests a password-reset OTP be emailed to [email]. Rethrows on
+  /// failure so callers (e.g. [ForgotPasswordScreen]) can show an inline
+  /// error without depending on this notifier's global auth state.
   Future<void> resetPassword(String email) async {
     try {
       await _repo.resetPassword(email);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  /// Applies a password-reset OTP previously sent via [resetPassword].
+  Future<void> confirmPasswordReset({
+    required String email,
+    required String otpCode,
+    required String newPassword,
+  }) async {
+    try {
+      await _repo.confirmPasswordReset(
+        email: email,
+        otpCode: otpCode,
+        newPassword: newPassword,
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 

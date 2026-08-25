@@ -14,19 +14,31 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
+/// Business Central resets passwords via an emailed OTP code rather than a
+/// reset link, so this flow has three steps: request the OTP, enter the
+/// OTP + a new password, then confirmation.
+enum _ForgotPasswordStep { request, confirm, done }
+
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
+  bool _obscure = true;
   bool _isLoading = false;
-  bool _sent = false;
   String? _error;
+  _ForgotPasswordStep _step = _ForgotPasswordStep.request;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
+    _otpCtrl.dispose();
+    _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _reset() async {
+  Future<void> _requestOtp() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       setState(() => _error = 'Enter a valid email');
@@ -38,11 +50,44 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
     try {
       await ref.read(authNotifierProvider.notifier).resetPassword(email);
-      setState(() => _sent = true);
+      setState(() => _step = _ForgotPasswordStep.confirm);
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _confirmReset() async {
+    final otp = _otpCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    if (otp.isEmpty) {
+      setState(() => _error = 'Enter the code sent to your email');
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => _error = 'Minimum 6 characters');
+      return;
+    }
+    if (password != _confirmPasswordCtrl.text) {
+      setState(() => _error = 'Passwords do not match');
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authNotifierProvider.notifier).confirmPasswordReset(
+            email: _emailCtrl.text.trim(),
+            otpCode: otp,
+            newPassword: password,
+          );
+      setState(() => _step = _ForgotPasswordStep.done);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -56,15 +101,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: _sent ? _buildSuccess() : _buildForm(),
+            child: switch (_step) {
+              _ForgotPasswordStep.request => _buildRequestForm(),
+              _ForgotPasswordStep.confirm => _buildConfirmForm(),
+              _ForgotPasswordStep.done => _buildSuccess(),
+            },
           ),
         ),
       ),
     );
-
   }
 
-  Widget _buildForm() {
+  Widget _buildRequestForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -77,7 +125,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Enter your email address and we will send you a link to reset your password.',
+          'Enter your email address and we will send you a code to reset your password.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
           textAlign: TextAlign.center,
         ),
@@ -96,9 +144,79 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 32),
         ChiromoButton(
-          label: 'Send Reset Link',
+          label: 'Send Reset Code',
           isLoading: _isLoading,
-          onPressed: _reset,
+          onPressed: _requestOtp,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfirmForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Icon(Icons.mark_email_read_outlined, size: 64, color: ChiromoColors.primary),
+        const SizedBox(height: 24),
+        Text(
+          'Check your email',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Enter the code we sent to ${_emailCtrl.text} along with your new password.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(_error!, style: const TextStyle(color: ChiromoColors.error)),
+          ),
+        ChiromoTextField(
+          controller: _otpCtrl,
+          label: 'Reset code',
+          hint: '123456',
+          prefixIcon: Icons.pin_outlined,
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 16),
+        ChiromoTextField(
+          controller: _passwordCtrl,
+          label: 'New password',
+          hint: '••••••••',
+          prefixIcon: Icons.lock_outline,
+          obscureText: _obscure,
+          suffixIcon: IconButton(
+            icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+            onPressed: () => setState(() => _obscure = !_obscure),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ChiromoTextField(
+          controller: _confirmPasswordCtrl,
+          label: 'Confirm new password',
+          hint: '••••••••',
+          prefixIcon: Icons.lock_outline,
+          obscureText: _obscure,
+        ),
+        const SizedBox(height: 32),
+        ChiromoButton(
+          label: 'Reset Password',
+          isLoading: _isLoading,
+          onPressed: _confirmReset,
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: _isLoading
+              ? null
+              : () => setState(() {
+                    _step = _ForgotPasswordStep.request;
+                    _error = null;
+                  }),
+          child: const Text('Use a different email'),
         ),
       ],
     );
@@ -108,16 +226,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.mark_email_read_outlined, size: 64, color: ChiromoColors.success),
+        const Icon(Icons.check_circle_outline, size: 64, color: ChiromoColors.success),
         const SizedBox(height: 24),
         Text(
-          'Check your email',
+          'Password reset',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
-          'We have sent a password reset link to ${_emailCtrl.text}',
+          'Your password has been reset successfully. Sign in with your new password.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
           textAlign: TextAlign.center,
         ),

@@ -6,8 +6,10 @@ abstract class AuthRepository {
   /// Sign in with email and password.
   Future<UserEntity> signInWithEmail(String email, String password);
 
-  /// Register with email and password.
-  Future<UserEntity> signUpWithEmail({
+  /// Register with email and password. Business Central does not log the
+  /// user in on registration — they must verify their email and sign in
+  /// separately, so this returns nothing on success.
+  Future<void> signUpWithEmail({
     required String email,
     required String password,
     required String fullName,
@@ -26,8 +28,15 @@ abstract class AuthRepository {
   /// Verify OTP.
   Future<UserEntity> verifyOtp(String phone, String otp);
 
-  /// Send password-reset email.
+  /// Request a password-reset OTP be emailed to [email].
   Future<void> resetPassword(String email);
+
+  /// Apply a password-reset OTP previously sent via [resetPassword].
+  Future<void> confirmPasswordReset({
+    required String email,
+    required String otpCode,
+    required String newPassword,
+  });
 
   /// Update password.
   Future<void> updatePassword(String newPassword);

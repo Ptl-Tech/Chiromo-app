@@ -1,80 +1,64 @@
 import '../../domain/entities/user_entity.dart';
 
-/// Data model that maps between the Supabase `profiles` table
-/// and the domain [UserEntity].
+/// Data model that maps between Business Central's `PublicUser` JSON
+/// (returned by the Go API's `/auth/login` and `/auth/me` endpoints) and the
+/// domain [UserEntity].
 class UserModel {
-  final String id;
+  final String email;
   final String? firstName;
+  final String? middleName;
   final String? lastName;
   final String? phoneNumber;
-  final String? avatarUrl;
-  final DateTime? dateOfBirth;
-  final String? bio;
-  final String role;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool emailVerified;
 
   const UserModel({
-    required this.id,
+    required this.email,
     this.firstName,
+    this.middleName,
     this.lastName,
     this.phoneNumber,
-    this.avatarUrl,
-    this.dateOfBirth,
-    this.bio,
-    required this.role,
-    required this.createdAt,
-    required this.updatedAt,
+    this.emailVerified = false,
   });
 
-  /// Derive a display name from first + last name.
-  String get fullName =>
-      [firstName ?? '', lastName ?? ''].where((s) => s.isNotEmpty).join(' ');
+  /// Derive a display name from first + middle + last name.
+  String get fullName => [
+    firstName ?? '',
+    middleName ?? '',
+    lastName ?? '',
+  ].where((s) => s.isNotEmpty).join(' ');
 
-  /// Deserialise from Supabase row.
+  /// Deserialise from the Go API's PublicUser JSON.
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      firstName: json['first_name'] as String?,
-      lastName: json['last_name'] as String?,
-      phoneNumber: json['phone_number'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
-      dateOfBirth: json['date_of_birth'] != null
-          ? DateTime.tryParse(json['date_of_birth'] as String)
-          : null,
-      bio: json['bio'] as String?,
-      role: (json['role'] as String?) ?? 'patient',
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      email: json['email'] as String? ?? '',
+      firstName: json['firstName'] as String?,
+      middleName: json['middleName'] as String?,
+      lastName: json['lastName'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
+      emailVerified: json['emailVerified'] as bool? ?? false,
     );
   }
 
-  /// Serialise to Supabase-compatible map.
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'first_name': firstName,
-    'last_name': lastName,
-    'phone_number': phoneNumber,
-    'avatar_url': avatarUrl,
-    'date_of_birth': dateOfBirth?.toIso8601String(),
-    'bio': bio,
-    'role': role,
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
-  };
-
   /// Convert to domain entity.
-  UserEntity toEntity() => UserEntity(
-    id: id,
-    email: '', // email comes from auth.users, not profiles
-    fullName: fullName,
-    phone: phoneNumber,
-    avatarUrl: avatarUrl,
-    dateOfBirth: dateOfBirth,
-    bio: bio,
-    role: UserRole.fromString(role),
-    branchId: null,
-    createdAt: createdAt,
-    updatedAt: updatedAt,
-  );
+  ///
+  /// Business Central's PublicUser has no internal id, role, avatar, or
+  /// profile metadata, so email is used as the stable identifier and the
+  /// remaining fields fall back to sensible defaults until the rest of the
+  /// app's profile data is migrated off Supabase.
+  UserEntity toEntity() {
+    final now = DateTime.now();
+    return UserEntity(
+      id: email,
+      email: email,
+      fullName: fullName,
+      phone: phoneNumber,
+      avatarUrl: null,
+      dateOfBirth: null,
+      bio: null,
+      role: UserRole.patient,
+      branchId: null,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
 }
