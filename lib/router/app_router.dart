@@ -24,7 +24,12 @@ import '../features/patient/presentation/screens/appointment_history_screen.dart
 import '../features/patient/presentation/screens/cbt_tools_screen.dart';
 import '../features/patient/presentation/screens/thought_record_screen.dart';
 import '../features/patient/presentation/screens/behavioral_activation_screen.dart';
+import '../features/patient/presentation/screens/create_exposure_ladder_screen.dart';
+import '../features/patient/presentation/screens/exposure_ladder_detail_screen.dart';
 import '../features/patient/presentation/screens/exposure_ladder_screen.dart';
+import '../features/patient/presentation/screens/log_exposure_trial_screen.dart';
+import '../features/patient/presentation/screens/medications_screen.dart';
+import '../features/patient/presentation/screens/visit_notes_screen.dart';
 import '../features/patient/presentation/screens/cbt_exercise_details_screen.dart';
 import '../features/patient/domain/entities/cbt_exercise_entity.dart';
 import '../features/patient/presentation/screens/health_screen.dart';
@@ -197,7 +202,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/patient/records',
             name: 'patient-records',
-            pageBuilder: (_, _) => _fadePage(const PatientRecordsScreen()),
+            pageBuilder: (_, state) => _fadePage(
+              PatientRecordsScreen(
+                initialTab:
+                    int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
+              ),
+            ),
+          ),
+          // Inside the shell: Tools is a bottom-nav destination, so the bar
+          // has to stay visible on it.
+          GoRoute(
+            path: '/patient/cbt',
+            name: 'cbt-tools',
+            pageBuilder: (_, _) => _fadePage(const CbtToolsScreen()),
           ),
           GoRoute(
             path: '/patient/emergency/safety-plan',
@@ -340,11 +357,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/patient/cbt',
-        name: 'cbt-tools',
-        pageBuilder: (_, _) => _fadePage(const CbtToolsScreen()),
-      ),
-      GoRoute(
         path: '/patient/cbt/thought-record',
         name: 'thought-record',
         pageBuilder: (_, _) => _fadePage(const ThoughtRecordScreen()),
@@ -355,9 +367,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, _) => _fadePage(const BehavioralActivationScreen()),
       ),
       GoRoute(
+        path: '/patient/medications',
+        name: 'patient-medications',
+        builder: (_, _) => const MedicationsScreen(),
+      ),
+      GoRoute(
+        path: '/patient/notes',
+        name: 'patient-visit-notes',
+        builder: (_, _) => const VisitNotesScreen(),
+      ),
+      GoRoute(
         path: '/patient/cbt/exposure-ladder',
         name: 'exposure-ladder',
         builder: (_, _) => const ExposureLadderScreen(),
+      ),
+      // Declared before the :entryNo route so "new" is never read as a ladder
+      // number.
+      GoRoute(
+        path: '/patient/cbt/exposure-ladder/new',
+        name: 'exposure-ladder-new',
+        builder: (_, _) => const CreateExposureLadderScreen(),
+      ),
+      GoRoute(
+        path: '/patient/cbt/exposure-ladder/:entryNo',
+        name: 'exposure-ladder-detail',
+        builder: (_, state) => ExposureLadderDetailScreen(
+          entryNo: int.tryParse(state.pathParameters['entryNo'] ?? '') ?? 0,
+        ),
+      ),
+      GoRoute(
+        path: '/patient/cbt/exposure-ladder/:entryNo/log',
+        name: 'exposure-ladder-log',
+        builder: (_, state) => LogExposureTrialScreen(
+          ladderEntryNo:
+              int.tryParse(state.pathParameters['entryNo'] ?? '') ?? 0,
+          stepRank: int.tryParse(state.uri.queryParameters['rank'] ?? '') ?? 1,
+        ),
       ),
       GoRoute(
         path: '/patient/cbt/daily-checkin',

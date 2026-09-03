@@ -1,416 +1,335 @@
 import 'package:flutter/material.dart';
-import '../../../../theme/chiromo_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../appointments/presentation/providers/appointment_providers.dart';
-import 'appointment_detail_screen.dart';
-import '../../../appointments/domain/entities/appointment_entity.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../theme/chiromo_colors.dart';
+import '../../../appointments/data/models/app_appointment_model.dart';
+import '../../../appointments/presentation/providers/app_appointment_providers.dart';
+import 'app_appointment_detail_screen.dart';
+
+/// The patient's appointment requests, split into what is still ahead of them
+/// and what is behind.
+///
+/// Backed by Business Central through the Go API, not Supabase: these are
+/// requests the hospital's own system knows about, which is the only place
+/// that can say whether one has actually been confirmed.
 class AppointmentHistoryScreen extends ConsumerWidget {
   const AppointmentHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncAppointments = ref.watch(patientAppointmentsProvider);
+    final upcomingAsync = ref.watch(upcomingAppointmentsProvider);
+    final pastAsync = ref.watch(pastAppointmentsProvider);
 
-    return asyncAppointments.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
-      data: (appointments) {
-        final now = DateTime.now();
-        final upcoming =
-            appointments.where((a) => a.scheduledAt.isAfter(now)).toList()
-              ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-        final past =
-            appointments.where((a) => !a.scheduledAt.isAfter(now)).toList()
-              ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+    final upcoming = upcomingAsync.valueOrNull ?? const <AppAppointment>[];
+    final past = pastAsync.valueOrNull ?? const <AppAppointment>[];
 
-        final initialIndex = upcoming.isEmpty && past.isNotEmpty ? 1 : 0;
+    // Open on Past when there is nothing coming up — otherwise the first thing
+    // someone with history sees is an empty tab.
+    final initialIndex = upcoming.isEmpty && past.isNotEmpty ? 1 : 0;
 
-        return DefaultTabController(
-          length: 2,
-          initialIndex: initialIndex,
-          child: Scaffold(
-            appBar: AppBar(
-              title: const Text('Appointments'),
-              bottom: const TabBar(
-                tabs: [
-                  Tab(text: 'Upcoming'),
-                  Tab(text: 'Past'),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              children: [
-                _buildList(upcoming, context),
-                _buildList(past, context),
-              ],
-            ),
-            floatingActionButton: FloatingActionButton.extended(
-              onPressed: () => context.push('/patient/book'),
-              icon: const Icon(Icons.add),
-              label: const Text('Book Appointment'),
-              backgroundColor: ChiromoColors.primary,
-              foregroundColor: Colors.white,
-            ),
+    return DefaultTabController(
+      length: 2,
+      initialIndex: initialIndex,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Appointments'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Upcoming'),
+              Tab(text: 'Past'),
+            ],
           ),
-        );
-      },
+        ),
+        body: upcomingAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => _ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(appAppointmentsProvider),
+          ),
+          data: (_) => TabBarView(
+            children: [
+              _AppointmentList(
+                appointments: upcoming,
+                emptyMessage: 'Nothing booked at the moment.',
+                onRefresh: () async => ref.invalidate(appAppointmentsProvider),
+              ),
+              _AppointmentList(
+                appointments: past,
+                emptyMessage: 'No past appointments yet.',
+                onRefresh: () async => ref.invalidate(appAppointmentsProvider),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/patient/book'),
+          icon: const Icon(Icons.add),
+          label: const Text('Book Appointment'),
+          backgroundColor: ChiromoColors.primary,
+          foregroundColor: Colors.white,
+        ),
+      ),
     );
   }
+}
 
-  Widget _buildList(
-    List<AppointmentEntity> appointments,
-    BuildContext context,
-  ) {
+class _AppointmentList extends StatelessWidget {
+  final List<AppAppointment> appointments;
+  final String emptyMessage;
+  final Future<void> Function() onRefresh;
+
+  const _AppointmentList({
+    required this.appointments,
+    required this.emptyMessage,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     if (appointments.isEmpty) {
-      return const Center(child: Text('No appointments found.'));
+      // Still wrapped in a scroll view so pull-to-refresh works on an empty
+      // tab — otherwise the only way to recheck is to leave and come back.
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          padding: const EdgeInsets.only(top: 120),
+          children: [
+            Center(
+              child: Text(
+                emptyMessage,
+                style: const TextStyle(color: ChiromoColors.textSecondary),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
-      itemCount: appointments.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final appt = appointments[index];
-        final doctorName =
-            appt.doctor?.userProfile?.fullName ?? 'Unknown Doctor';
-        final specialty = appt.doctor?.specialty ?? 'Specialist';
-        final dateStr =
-            '${appt.scheduledAt.day}/${appt.scheduledAt.month}/${appt.scheduledAt.year}';
-        final timeStr =
-            '${appt.scheduledAt.hour.toString().padLeft(2, '0')}:${appt.scheduledAt.minute.toString().padLeft(2, '0')}';
-
-        Color statusColor = ChiromoColors.textSecondary;
-        if (appt.status == 'confirmed') {
-          statusColor = ChiromoColors.statusConfirmed;
-        }
-        if (appt.status == 'cancelled' || appt.status == 'rejected') {
-          statusColor = ChiromoColors.statusCancelled;
-        }
-        if (appt.status == 'completed') {
-          statusColor = ChiromoColors.statusCompleted;
-        }
-
-        return GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AppointmentDetailScreen(appointment: appt),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+        itemCount: appointments.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final appointment = appointments[index];
+          return _AppointmentCard(
+            appointment: appointment,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    AppAppointmentDetailScreen(appointment: appointment),
+              ),
             ),
-          ),
-          child: _buildAppointmentCard(
-            doctorName: doctorName,
-            specialty: specialty,
-            date: dateStr,
-            time: timeStr,
-            type: appt.type,
-            status: appt.status.toUpperCase(),
-            statusColor: statusColor,
-            avatarUrl: appt.doctor?.userProfile?.avatarUrl,
-            onBookAgain: () => context.push('/patient/book'),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
+}
 
-  Widget _buildAppointmentCard({
-    required String doctorName,
-    required String specialty,
-    required String date,
-    required String time,
-    required String type,
-    required String status,
-    required Color statusColor,
-    String? avatarUrl,
-    required VoidCallback onBookAgain,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: ChiromoColors.primary.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+class _AppointmentCard extends StatelessWidget {
+  final AppAppointment appointment;
+  final VoidCallback onTap;
+
+  const _AppointmentCard({required this.appointment, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colour = statusColour(appointment.status);
+    final date = appointment.date;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: ChiromoColors.primary.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+          border: Border.all(
+            color: ChiromoColors.primary.withValues(alpha: 0.1),
           ),
-        ],
-        border: Border.all(color: ChiromoColors.primary.withValues(alpha: 0.1)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.08),
-                border: Border(
-                  bottom: BorderSide(
-                    color: statusColor.withValues(alpha: 0.15),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: colour.withValues(alpha: 0.08),
+                  border: Border(
+                    bottom: BorderSide(color: colour.withValues(alpha: 0.15)),
                   ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_month_rounded,
-                        size: 16,
-                        color: statusColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        date,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: statusColor,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: ChiromoColors.primary.withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 26,
-                          backgroundColor: ChiromoColors.surfaceVariant,
-                          foregroundImage: avatarUrl != null
-                              ? NetworkImage(avatarUrl)
-                              : null,
-                          child: avatarUrl == null
-                              ? const Icon(
-                                  Icons.person,
-                                  color: ChiromoColors.textTertiary,
-                                  size: 28,
-                                )
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              doctorName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 17,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              specialty,
-                              style: const TextStyle(
-                                color: ChiromoColors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ChiromoColors.surfaceVariant.withValues(
-                        alpha: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Time',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: ChiromoColors.textTertiary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.access_time_rounded,
-                                    size: 16,
-                                    color: ChiromoColors.primary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    time,
-                                    style: const TextStyle(
-                                      color: ChiromoColors.textPrimary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 32,
-                          color: Colors.grey.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Consultation Type',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: ChiromoColors.textTertiary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    type.toLowerCase().contains('person') ||
-                                            type.toLowerCase().contains(
-                                              'physical',
-                                            )
-                                        ? Icons.local_hospital_rounded
-                                        : Icons.videocam_rounded,
-                                    size: 16,
-                                    color: ChiromoColors.primary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      type.toUpperCase() == 'VIDEO' ||
-                                              type.toLowerCase().contains(
-                                                'online',
-                                              )
-                                          ? 'Video Call'
-                                          : 'In-Person',
-                                      style: const TextStyle(
-                                        color: ChiromoColors.textPrimary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: onBookAgain,
-                          icon: const Icon(Icons.add_circle_outline, size: 18),
-                          label: const Text('Book Appointment'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: ChiromoColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (status == 'COMPLETED') ...[
-                    const SizedBox(height: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Row(
                       children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.receipt_long, size: 18),
-                            label: const Text('Invoice'),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
+                        Icon(
+                          Icons.calendar_month_rounded,
+                          size: 16,
+                          color: colour,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.medication, size: 18),
-                            label: const Text('Prescription'),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
+                        const SizedBox(width: 6),
+                        Text(
+                          date == null
+                              ? 'Date to confirm'
+                              : '${date.day}/${date.month}/${date.year}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: colour,
+                            fontSize: 13,
                           ),
                         ),
                       ],
                     ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        appointment.status.label.toUpperCase(),
+                        style: TextStyle(
+                          color: colour,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
                   ],
-                ],
+                ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: ChiromoColors.primary.withValues(alpha: 0.2),
+                          width: 2,
+                        ),
+                      ),
+                      child: const CircleAvatar(
+                        radius: 26,
+                        backgroundColor: ChiromoColors.surfaceVariant,
+                        child: Icon(
+                          Icons.person,
+                          color: ChiromoColors.textTertiary,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            appointment.doctorName.isEmpty
+                                ? 'Doctor to be assigned'
+                                : appointment.doctorName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                              color: ChiromoColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            appointment.appointmentType.isEmpty
+                                ? 'Consultation'
+                                : appointment.appointmentType,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                          if (appointment.timeRange.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.schedule,
+                                  size: 14,
+                                  color: ChiromoColors.textTertiary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  appointment.timeRange,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: ChiromoColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: ChiromoColors.textTertiary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: ChiromoColors.error,
             ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: ChiromoColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextButton(onPressed: onRetry, child: const Text('Try again')),
           ],
         ),
       ),

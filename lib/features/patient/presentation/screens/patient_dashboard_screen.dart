@@ -7,6 +7,7 @@ import '../../../../widgets/layouts/app_scaffold.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../notifications/presentation/providers/notification_providers.dart';
 import '../../data/models/checkin_model.dart';
+import '../providers/chat_providers.dart';
 import '../providers/checkin_providers.dart';
 import '../widgets/patient_dashboard_widgets.dart';
 import 'package:chiromo/theme/chiromo_colors.dart';
@@ -107,6 +108,16 @@ class PatientDashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                // Messaging lives here rather than in the bottom nav: it is
+                // the one surface the clinic initiates, so it stays one tap
+                // from home with its unread count visible.
+                _HeaderIconButton(
+                  icon: Icons.chat_bubble_outline,
+                  badgeCount:
+                      ref.watch(unreadMessagesCountProvider).valueOrNull ?? 0,
+                  onTap: () => context.push('/patient/messages'),
+                ),
+                const SizedBox(width: 8),
                 Builder(
                   builder: (context) {
                     final unreadCount = ref.watch(
@@ -854,6 +865,70 @@ class _MoodInsightsCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A header icon with an optional unread badge, styled to match the
+/// notifications bell beside it.
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final int badgeCount;
+  final VoidCallback onTap;
+
+  const _HeaderIconButton({
+    required this.icon,
+    required this.badgeCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.4,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: ChiromoColors.primaryDark, size: 22),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: ChiromoColors.error,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.scaffoldBackgroundColor,
+                    width: 2,
+                  ),
+                ),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                child: Text(
+                  badgeCount > 9 ? '9+' : '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
         ],
       ),
     );

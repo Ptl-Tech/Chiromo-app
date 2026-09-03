@@ -1,162 +1,220 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../theme/chiromo_colors.dart';
 import '../../../../widgets/layouts/app_scaffold.dart';
-import 'package:chiromo/widgets/glass_card.dart';
-import '../providers/health_metrics_provider.dart';
-import '../../../../widgets/animated_counter.dart';
-import '../../../appointments/presentation/providers/appointment_providers.dart';
+import '../../../appointments/data/models/app_appointment_model.dart';
+import '../../../appointments/presentation/providers/app_appointment_providers.dart';
+import '../providers/checkin_providers.dart';
+import '../widgets/wellbeing_stat_cards.dart';
 
+/// The patient's health hub: how they have been doing, what they are taking,
+/// and what the clinic has written for them.
+///
+/// This absorbed the separate Analytics tab. Mood trends are health data, and
+/// splitting them across two destinations meant two half screens and a choice
+/// nobody wanted to make.
 class HealthScreen extends ConsumerWidget {
   const HealthScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncMetrics = ref.watch(healthMetricsProvider);
-
     return AppScaffold(
       title: 'My Health',
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: asyncMetrics.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(
-                  child: Text(
-                    'Failed to load health data: $e',
-                    style: const TextStyle(color: ChiromoColors.textPrimary),
-                  ),
-                ),
-                data: (metrics) {
-                  if (metrics.isEmpty) {
-                    return const Center(child: Text('No health data yet.'));
-                  }
-                  return Wrap(
-                    spacing: 20,
-                    runSpacing: 20,
-                    children: metrics
-                        .map((m) => _MetricCard(metric: m))
-                        .toList(),
-                  );
-                },
-              ),
+      showBack: false,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(checkinHistoryProvider);
+          ref.invalidate(sleepLogsProvider);
+        },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: const [
+            _Heading(
+              title: 'Your Progress',
+              subtitle: 'Visualising your mental health journey',
             ),
+            SizedBox(height: 16),
+            WellbeingStatCards(),
+            SizedBox(height: 20),
+            _MoodTrendCard(),
+            SizedBox(height: 20),
+            _RecordsRows(),
+            SizedBox(height: 20),
+            _CareTeam(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Heading extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _Heading({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: ChiromoColors.textPrimary,
           ),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Text(
-                'My Care Team',
+        ),
+        const SizedBox(height: 2),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 13,
+            color: ChiromoColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Mood over the check-ins the patient has actually recorded.
+///
+/// Gaps are gaps: a day with no check-in is simply absent rather than plotted
+/// as zero, which would draw a crash that never happened.
+class _MoodTrendCard extends ConsumerWidget {
+  const _MoodTrendCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trend = ref.watch(moodTrendProvider);
+
+    return trend.maybeWhen(
+      data: (points) {
+        // Two points is the minimum that makes a line mean anything. One
+        // reading drawn as a trend implies a direction it cannot show.
+        if (points.length < 2) return const SizedBox.shrink();
+
+        final recent = points.length > 14
+            ? points.sublist(points.length - 14)
+            : points;
+
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          decoration: BoxDecoration(
+            color: ChiromoColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ChiromoColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Mood trend',
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: ChiromoColors.textPrimary,
                 ),
               ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: ref
-                .watch(patientAppointmentsProvider)
-                .when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (err, st) => Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Text('Failed to load your doctors: $err'),
-                  ),
-                  data: (appointments) {
-                    // Extract unique doctors
-                    final doctorsMap = <String, dynamic>{};
-                    for (final appt in appointments) {
-                      if (appt.doctor != null) {
-                        doctorsMap[appt.doctor!.id] = appt.doctor;
-                      }
-                    }
-
-                    final doctors = doctorsMap.values.toList();
-
-                    if (doctors.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Text(
-                          'You haven\'t interacted with any doctors yet.',
-                          style: TextStyle(color: ChiromoColors.textSecondary),
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      itemCount: doctors.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final doc = doctors[index];
-                        final name =
-                            doc.userProfile?.fullName ?? 'Unknown Doctor';
-                        final specialty = doc.specialty;
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: ChiromoColors.border),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(12),
-                            leading: CircleAvatar(
-                              radius: 24,
-                              backgroundColor: ChiromoColors.primarySurface,
-                              backgroundImage:
-                                  doc.userProfile?.avatarUrl != null
-                                  ? NetworkImage(doc.userProfile!.avatarUrl!)
-                                  : null,
-                              child: doc.userProfile?.avatarUrl == null
-                                  ? Text(
-                                      name.substring(0, 1),
-                                      style: const TextStyle(
-                                        color: ChiromoColors.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              specialty,
-                              style: const TextStyle(
-                                color: ChiromoColors.primary,
-                                fontSize: 13,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.chat_bubble_outline,
-                                color: ChiromoColors.primary,
-                              ),
-                              onPressed: () {
-                                context.push(
-                                  '/patient/messages/chat/${doc.id}?doctorName=${Uri.encodeComponent(name)}&specialty=${Uri.encodeComponent(specialty)}',
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+              Text(
+                'Your last ${recent.length} check-ins',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: ChiromoColors.textTertiary,
                 ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 150,
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+                    maxY: 10,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: 5,
+                      getDrawingHorizontalLine: (_) => const FlLine(
+                        color: ChiromoColors.divider,
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: const FlTitlesData(
+                      show: true,
+                      topTitles: AxisTitles(),
+                      rightTitles: AxisTitles(),
+                      bottomTitles: AxisTitles(),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 5,
+                          reservedSize: 26,
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: [
+                          for (var i = 0; i < recent.length; i++)
+                            FlSpot(i.toDouble(), recent[i].value.toDouble()),
+                        ],
+                        isCurved: true,
+                        curveSmoothness: 0.28,
+                        color: ChiromoColors.primary,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: ChiromoColors.primary.withValues(alpha: 0.12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Ways into what the clinic has recorded. Both land on My Records, which is
+/// the single home for it — these are doors, not separate destinations.
+class _RecordsRows extends StatelessWidget {
+  const _RecordsRows();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ChiromoColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ChiromoColors.border),
+      ),
+      child: Column(
+        children: [
+          _NavRow(
+            icon: Icons.medication_outlined,
+            title: 'Medications',
+            subtitle: 'What your doctor has you taking',
+            onTap: () => context.push('/patient/records?tab=0'),
+          ),
+          const Divider(height: 1, indent: 60, color: ChiromoColors.divider),
+          _NavRow(
+            icon: Icons.description_outlined,
+            title: 'Notes from your visits',
+            subtitle: 'What your doctor wrote for you',
+            onTap: () => context.push('/patient/records?tab=1'),
           ),
         ],
       ),
@@ -164,37 +222,63 @@ class HealthScreen extends ConsumerWidget {
   }
 }
 
-class _MetricCard extends StatelessWidget {
-  final HealthMetric metric;
-  const _MetricCard({required this.metric});
+class _NavRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _NavRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      borderRadius: 20,
-      elevation: 4,
+    return InkWell(
+      onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
           children: [
-            Text(
-              metric.type.capitalize(),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            AnimatedCounter(
-              value: metric.value.toInt(),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Recorded: ${metric.recordedAt.toLocal().toString().split('.').first}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: ChiromoColors.textSecondary,
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: ChiromoColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(10),
               ),
+              child: Icon(icon, size: 18, color: ChiromoColors.primaryDark),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: ChiromoColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ChiromoColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: ChiromoColors.textTertiary,
             ),
           ],
         ),
@@ -203,7 +287,81 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-extension StringCasingExtension on String {
-  String capitalize() =>
-      length > 0 ? '${this[0].toUpperCase()}${substring(1)}' : '';
+/// The doctors this patient has actually been booked with, taken from their
+/// own appointments rather than a directory.
+class _CareTeam extends ConsumerWidget {
+  const _CareTeam();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appointments = ref.watch(appAppointmentsProvider);
+
+    return appointments.maybeWhen(
+      data: (items) {
+        final byId = <String, AppAppointment>{};
+        for (final appointment in items) {
+          if (appointment.doctorId.isEmpty) continue;
+          byId.putIfAbsent(appointment.doctorId, () => appointment);
+        }
+        if (byId.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'My care team',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: ChiromoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            for (final appointment in byId.values)
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: ChiromoColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ChiromoColors.border),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: ChiromoColors.primarySurface,
+                      child: Text(
+                        appointment.doctorName.isEmpty
+                            ? '?'
+                            : appointment.doctorName.characters.first
+                                  .toUpperCase(),
+                        style: const TextStyle(
+                          color: ChiromoColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        appointment.doctorName.isEmpty
+                            ? 'Your doctor'
+                            : appointment.doctorName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: ChiromoColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
 }

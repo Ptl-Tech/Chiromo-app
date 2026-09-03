@@ -191,18 +191,24 @@ class AppShell extends ConsumerWidget {
             '/patient/history',
             'assets/images/nav/appointments.png',
           ),
+          // Tools rather than Messages: the ladder, thought records and
+          // check-ins are what someone opens between visits, so they are the
+          // app's daily surface. Messaging moved to the dashboard header,
+          // where it keeps its unread badge - an unread note from a clinician
+          // is the one thing here that must not sit unseen.
           _NavItem(
-            'Messages',
-            Icons.chat_outlined,
-            Icons.chat,
-            '/patient/messages',
-            'assets/images/nav/messages.png',
+            'Tools',
+            Icons.psychology_outlined,
+            Icons.psychology,
+            '/patient/cbt',
           ),
+          // Health absorbed Analytics: mood trends are health data, and one
+          // substantial screen beats two half ones.
           _NavItem(
-            'Analytics',
-            Icons.analytics_outlined,
-            Icons.analytics,
-            '/patient/analytics',
+            'Health',
+            Icons.favorite_outline,
+            Icons.favorite,
+            '/patient/health',
           ),
           _NavItem(
             'Profile',

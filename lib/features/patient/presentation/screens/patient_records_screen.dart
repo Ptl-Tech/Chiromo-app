@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:chiromo/theme/chiromo_colors.dart';
 import 'package:chiromo/widgets/layouts/app_scaffold.dart';
-import 'package:chiromo/features/doctor/presentation/providers/clinical_providers.dart';
-import 'package:intl/intl.dart';
 
+import 'medications_screen.dart';
+import 'visit_notes_screen.dart';
+
+/// Everything the clinic has recorded for this patient, in one place.
+///
+/// Previously this read Supabase and rendered `clinicalNotes` — the notes a
+/// doctor writes for other clinicians — straight to the patient. Both tabs now
+/// come from Business Central, and the notes tab shows only what a doctor
+/// wrote *for* the patient and released. Clinical documentation is a separate
+/// record and is deliberately not served to the app at all: it is written in a
+/// register that reads badly, and occasionally harmfully, to the person it is
+/// about.
 class PatientRecordsScreen extends ConsumerStatefulWidget {
-  const PatientRecordsScreen({super.key});
+  /// Which tab to open on. The medication list is the more frequent errand —
+  /// someone standing at the cupboard wondering about a dose — so it leads.
+  final int initialTab;
+
+  const PatientRecordsScreen({this.initialTab = 0, super.key});
 
   @override
   ConsumerState<PatientRecordsScreen> createState() =>
@@ -20,7 +35,11 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 1),
+    );
   }
 
   @override
@@ -42,188 +61,18 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen>
             unselectedLabelColor: ChiromoColors.textSecondary,
             indicatorColor: ChiromoColors.primary,
             tabs: const [
-              Tab(text: 'Prescriptions'),
-              Tab(text: 'Medical History'),
+              Tab(text: 'Medications'),
+              Tab(text: 'Notes'),
             ],
           ),
-          const SizedBox(height: 16),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildPrescriptionsTab(), _buildMedicalHistoryTab()],
+              children: const [MedicationsView(), VisitNotesView()],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPrescriptionsTab() {
-    final prescriptionsAsync = ref.watch(patientPrescriptionsProvider);
-
-    return prescriptionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Error: $e')),
-      data: (prescriptions) {
-        if (prescriptions.isEmpty) {
-          return const Center(
-            child: Text(
-              'No prescriptions found.',
-              style: TextStyle(color: ChiromoColors.textSecondary),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: prescriptions.length,
-          itemBuilder: (context, index) {
-            final prescription = prescriptions[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(
-                  prescription.medicationName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text('Dosage: ${prescription.dosage}'),
-                    Text('Frequency: ${prescription.frequency}'),
-                    Text('Duration: ${prescription.durationDays} days'),
-                    if (prescription.instructions != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Notes: ${prescription.instructions}',
-                        style: const TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ],
-                ),
-                trailing: Chip(
-                  label: Text(
-                    prescription.isDispensed ? 'Dispensed' : 'Pending',
-                  ),
-                  backgroundColor: prescription.isDispensed
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.orange.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(
-                    color: prescription.isDispensed
-                        ? Colors.green
-                        : Colors.orange,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildMedicalHistoryTab() {
-    final recordsAsync = ref.watch(patientMedicalRecordsProvider);
-
-    return recordsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Error: $e')),
-      data: (records) {
-        if (records.isEmpty) {
-          return const Center(
-            child: Text(
-              'No medical history found.',
-              style: TextStyle(color: ChiromoColors.textSecondary),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: records.length,
-          itemBuilder: (context, index) {
-            final record = records[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(record.createdAt),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: ChiromoColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    if (record.chiefComplaint != null) ...[
-                      const Text(
-                        'Complaint',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: ChiromoColors.textSecondary,
-                        ),
-                      ),
-                      Text(record.chiefComplaint!),
-                      const SizedBox(height: 8),
-                    ],
-                    if (record.clinicalNotes != null) ...[
-                      const Text(
-                        'Clinical Notes',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: ChiromoColors.textSecondary,
-                        ),
-                      ),
-                      Text(record.clinicalNotes!),
-                      const SizedBox(height: 8),
-                    ],
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 8,
-                      children: [
-                        if (record.bloodPressure != null)
-                          _buildVitalsBadge('BP', record.bloodPressure!),
-                        if (record.heartRate != null)
-                          _buildVitalsBadge('HR', '${record.heartRate} bpm'),
-                        if (record.temperature != null)
-                          _buildVitalsBadge('Temp', '${record.temperature}°C'),
-                        if (record.weight != null)
-                          _buildVitalsBadge('Weight', '${record.weight} kg'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildVitalsBadge(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: ChiromoColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text('$label: $value', style: const TextStyle(fontSize: 12)),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../theme/chiromo_colors.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -101,27 +102,24 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     final user = ref.watch(authNotifierProvider).valueOrNull;
     final theme = Theme.of(context);
 
-    String dobSubtitle = 'Not provided';
-    if (user?.dateOfBirth != null) {
+    // Business Central serialises an unset date as 0001-01-01. Treated as a
+    // real birthday it renders as '2025 years', so anything implausibly old
+    // is read as missing rather than shown.
+    int? age;
+    if (_hasRealDob(user?.dateOfBirth)) {
       final dob = user!.dateOfBirth!.toLocal();
-      final dateStr = dob.toIso8601String().split('T').first;
       final now = DateTime.now();
-      int age = now.year - dob.year;
+      var years = now.year - dob.year;
       if (now.month < dob.month ||
           (now.month == dob.month && now.day < dob.day)) {
-        age--;
+        years--;
       }
-      dobSubtitle = '$dateStr ($age yrs old)';
+      age = years;
     }
 
     return AppScaffold(
       title: 'My Profile',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: () => _showEditProfileDialog(context, user),
-        ),
-      ],
+
       body: LayoutBuilder(
         builder: (ctx, constraints) {
           final isNarrow = constraints.maxWidth < 600;
@@ -155,15 +153,17 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionHeader('Personal Profile'),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(88),
-                                onTap: _pickImage,
-                                child: CircleAvatar(
-                                  radius: isNarrow ? 44 : 50,
+                          // Header follows the agreed design: one centred
+                          // identity block, and a single 'View Full Profile'
+                          // action that also opens editing - two separate
+                          // affordances for looking at and changing the same
+                          // information is a distinction users do not make.
+                          Center(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                CircleAvatar(
+                                  radius: 52,
                                   backgroundColor: ChiromoColors.primarySurface,
                                   foregroundImage: _pickedImageBytes != null
                                       ? MemoryImage(_pickedImageBytes!)
@@ -178,48 +178,84 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                           (user?.fullName ?? user?.email ?? 'P')
                                               .substring(0, 1)
                                               .toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: isNarrow ? 32 : 36,
+                                          style: const TextStyle(
+                                            fontSize: 36,
                                             fontWeight: FontWeight.bold,
                                             color: ChiromoColors.primary,
                                           ),
                                         )
                                       : null,
                                 ),
-                              ),
-                              const SizedBox(width: 18),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      user?.fullName ?? 'Patient Name',
-                                      style: theme.textTheme.headlineSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 2,
+                                  child: InkWell(
+                                    onTap: _pickImage,
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(7),
+                                      decoration: BoxDecoration(
+                                        color: ChiromoColors.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: theme.cardColor,
+                                          width: 3,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.photo_camera,
+                                        size: 15,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      user?.role.label ?? 'Patient',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: ChiromoColors.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      user?.email ?? 'patient@example.com',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: ChiromoColors.textSecondary,
-                                          ),
-                                    ),
-                                  ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            user?.fullName ?? 'Patient Name',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: ChiromoColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.email ?? 'patient@example.com',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: ChiromoColors.textSecondary,
+                            ),
+                          ),
+                          _buildFactPills(age, user?.gender),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  _showEditProfileDialog(context, user),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: ChiromoColors.primary,
+                                side: const BorderSide(
+                                  color: ChiromoColors.border,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 28,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
                               ),
-                            ],
+                              child: const Text(
+                                'View Full Profile',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
                           ),
                           if (_pickedImageBytes != null) ...[
                             const SizedBox(height: 12),
@@ -278,45 +314,54 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 24),
-                          const Divider(height: 1),
-                          const SizedBox(height: 24),
-                          _buildInfoRow(
-                            icon: Icons.phone_outlined,
-                            title: 'Phone',
-                            subtitle: user?.phone ?? '+254 700 000000',
-                            onTap: () => _editPhone(user?.phone ?? ''),
-                          ),
-                          const Divider(height: 1),
-                          _buildInfoRow(
-                            icon: Icons.calendar_today_outlined,
-                            title: 'Date of Birth',
-                            subtitle: dobSubtitle,
-                            onTap: () async {
-                              await _showEditProfileDialog(context, user);
-                            },
-                          ),
-                          const Divider(height: 1),
-                          _buildInfoRow(
-                            icon: Icons.location_on_outlined,
-                            title: 'Address',
-                            subtitle: 'Nairobi, Kenya',
-                            onTap: () async {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Address editing not implemented yet',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 18),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Shortcuts, not the canonical home - both land on
+                          // My Records, which is the single place this lives.
+                          // Deliberately no 'Clinician Shared Data' row yet:
+                          // nothing currently reads the share flag, so it
+                          // would promise the patient a control that does not
+                          // exist.
+                          _buildSectionHeader('Health & Information'),
+                          _buildProfileTile(
+                            Icons.contact_phone_outlined,
+                            'Emergency Contact',
+                            'Who we call if something happens',
+                            onTap: () =>
+                                context.push('/patient/emergency/contact'),
+                          ),
+                          const Divider(height: 32),
+                          _buildProfileTile(
+                            Icons.medication_outlined,
+                            'Medications',
+                            'What your doctor has you taking',
+                            onTap: () => context.push('/patient/records?tab=0'),
+                          ),
+                          const Divider(height: 32),
+                          _buildProfileTile(
+                            Icons.description_outlined,
+                            'Notes from your visits',
+                            'What your doctor wrote for you',
+                            onTap: () => context.push('/patient/records?tab=1'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
                         color: theme.cardColor,
@@ -412,10 +457,23 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     );
     final phoneController = TextEditingController(text: user.phone ?? '');
     final bioController = TextEditingController(text: user.bio ?? '');
-    DateTime? selectedDob = user?.dateOfBirth as DateTime?;
+    final idNumberController = TextEditingController(text: user.idNumber ?? '');
+    // BC's blank date arrives as 0001-01-01; carrying that into the picker
+    // would open it a couple of millennia ago.
+    DateTime? selectedDob = _hasRealDob(user?.dateOfBirth as DateTime?)
+        ? user?.dateOfBirth as DateTime?
+        : null;
+    String? selectedGender = (user.gender as String?)?.trim().toLowerCase();
+    if (selectedGender != 'male' && selectedGender != 'female') {
+      selectedGender = null;
+    }
 
     await showModalBottomSheet<void>(
       context: context,
+      // Pushed on the root navigator so the sheet covers the shell's bottom
+      // nav bar - a tab strip showing through an edit form invites someone
+      // to navigate away mid-edit.
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
@@ -582,6 +640,47 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Gender',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: ChiromoColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            for (final option in const ['male', 'female'])
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(_titleCase(option)),
+                                  selected: selectedGender == option,
+                                  onSelected: (_) => setState(
+                                    () => selectedGender =
+                                        selectedGender == option
+                                        ? null
+                                        : option,
+                                  ),
+                                  selectedColor: ChiromoColors.primary,
+                                  labelStyle: TextStyle(
+                                    color: selectedGender == option
+                                        ? Colors.white
+                                        : ChiromoColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildModernTextField(
+                          controller: idNumberController,
+                          label: 'ID Number',
+                          icon: Icons.badge_outlined,
+                        ),
                         const SizedBox(height: 32),
                         Row(
                           children: [
@@ -618,6 +717,9 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                               .trim(),
                                           phone: phoneController.text.trim(),
                                           dateOfBirth: selectedDob,
+                                          gender: selectedGender ?? '',
+                                          idNumber: idNumberController.text
+                                              .trim(),
                                           bio: bioController.text.trim(),
                                         );
                                     ref
@@ -724,6 +826,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
   void _showNotificationsSettings() {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
@@ -785,6 +888,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
   void _showPrivacyPolicy() {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -882,6 +986,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
   void _showHelpSupport() {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
@@ -973,6 +1078,72 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     );
   }
 
+  /// The age and gender chips beneath the name.
+  ///
+  /// Each half is dropped when the underlying value is missing, rather than
+  /// printing a placeholder - a profile that says 'Gender: not set' is worse
+  /// than one that simply does not mention it.
+  /// Whether a date of birth is a real one rather than BC's blank sentinel.
+  static bool _hasRealDob(DateTime? dob) => dob != null && dob.year > 1900;
+
+  static String _titleCase(String value) {
+    if (value.isEmpty) return value;
+    return value[0].toUpperCase() + value.substring(1).toLowerCase();
+  }
+
+  Widget _buildFactPills(int? age, String? gender) {
+    // Trimmed, because BC returns a blank option as whitespace rather than an
+    // empty string - which rendered the pill as a bare icon with no label.
+    final genderLabel = _titleCase((gender ?? '').trim());
+    final hasAge = age != null;
+    final hasGender = genderLabel.isNotEmpty;
+
+    if (!hasAge && !hasGender) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          decoration: BoxDecoration(
+            color: ChiromoColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasAge) _buildFactPill(Icons.cake_outlined, '$age years'),
+              if (hasAge && hasGender)
+                Container(width: 1, height: 16, color: ChiromoColors.border),
+              if (hasGender) _buildFactPill(Icons.person_outline, genderLabel),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFactPill(IconData icon, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: ChiromoColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ChiromoColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileTile(
     IconData icon,
     String title,
@@ -1010,155 +1181,6 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: ChiromoColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 20, color: ChiromoColors.primary),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: ChiromoColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: ChiromoColors.textTertiary,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showEditFieldSheet({
-    required String title,
-    required String initialValue,
-    required Future<void> Function(String) onSave,
-  }) async {
-    final controller = TextEditingController(text: initialValue);
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                    ),
-                  ],
-                ),
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(labelText: title),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final messenger = ScaffoldMessenger.of(context);
-                          final value = controller.text.trim();
-                          Navigator.of(ctx).pop();
-                          try {
-                            await onSave(value);
-                            if (!mounted) return;
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text('Saved')),
-                            );
-                          } catch (e) {
-                            if (!mounted) return;
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text('Failed to save')),
-                            );
-                          }
-                        },
-                        child: const Text('Save'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _editPhone(String current) async {
-    final user = ref.read(authNotifierProvider).valueOrNull;
-    await _showEditFieldSheet(
-      title: 'Phone',
-      initialValue: current,
-      onSave: (val) async {
-        if (user == null) throw StateError('Not signed in');
-        final updated = await ref
-            .read(authRepositoryProvider)
-            .updateProfile(phone: val.trim());
-        ref.read(authNotifierProvider.notifier).updateCurrentUser(updated);
-      },
-    );
-  }
-
   /// Strips the "Exception: " prefix Dart adds when an [Exception] carrying a
   /// server message is stringified, so the API's own wording reaches the user.
   String _errorText(Object error) =>
@@ -1173,6 +1195,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
+      // Pushed on the root navigator so the sheet covers the shell's bottom
+      // nav bar - a tab strip showing through an edit form invites someone
+      // to navigate away mid-edit.
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
@@ -1327,6 +1353,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
+      // Pushed on the root navigator so the sheet covers the shell's bottom
+      // nav bar - a tab strip showing through an edit form invites someone
+      // to navigate away mid-edit.
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(

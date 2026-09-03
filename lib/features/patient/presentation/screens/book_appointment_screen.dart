@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../theme/chiromo_colors.dart';
-import '../../../../widgets/layouts/app_scaffold.dart';
-import '../../../../widgets/buttons/chiromo_button.dart';
-import '../../../doctor/domain/entities/doctor_entity.dart';
-import '../../../doctor/presentation/providers/doctor_providers.dart';
-import '../../../appointments/data/models/appointment_model.dart';
-import '../../../appointments/presentation/providers/appointment_providers.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../admin/domain/entities/branch_entity.dart';
-import '../../../admin/presentation/providers/admin_providers.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../theme/chiromo_colors.dart';
+import '../../../../widgets/buttons/chiromo_button.dart';
+import '../../../../widgets/error/error_retry_widget.dart';
+import '../../../../widgets/layouts/app_scaffold.dart';
+import '../../../appointments/data/models/app_appointment_model.dart';
+import '../../../appointments/presentation/providers/app_appointment_providers.dart';
+
+/// Raises an appointment request.
+///
+/// The screen is honest about what the button does: this asks reception for a
+/// slot, it does not book one. Saying "booked" here and then having the
+/// request rejected is how somebody ends up travelling to a clinic that is not
+/// expecting them.
+///
+/// Doctors and slots both come from Business Central's live diary — a doctor
+/// with nothing free simply does not appear, so there is no way to pick a slot
+/// that was never on offer.
 class BookAppointmentScreen extends ConsumerStatefulWidget {
   const BookAppointmentScreen({super.key});
 
@@ -21,505 +28,533 @@ class BookAppointmentScreen extends ConsumerStatefulWidget {
 }
 
 class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
-  int _currentStep = 0;
-  BranchEntity? _selectedBranch;
-  String? _selectedType;
-  DoctorEntity? _selectedDoctor;
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
-  bool _isRecurring = false;
+  final _reasonController = TextEditingController();
 
-  void _nextStep() {
-    if (_currentStep == 0 && _selectedBranch == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a branch.')));
-      return;
-    }
-    if (_currentStep == 1 && _selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please choose a consultation type.')),
-      );
-      return;
-    }
-    if (_currentStep == 2 && _selectedDoctor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a specialist.')),
-      );
-      return;
-    }
-    if (_currentStep == 3 && _selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please pick a date for your appointment.'),
-        ),
-      );
-      return;
-    }
-    if (_currentStep == 3 && _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please choose a time slot for your appointment.'),
-        ),
-      );
-      return;
-    }
-    if (_currentStep < 4) {
-      setState(() => _currentStep += 1);
-    }
-  }
+  AvailableDoctor? _doctor;
+  DateTime? _day;
+  DoctorSlot? _slot;
+  AppointmentType? _type;
+  bool _saving = false;
 
-  void _cancelStep() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep -= 1);
-    }
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final availability = ref.watch(availabilityProvider(null));
+    final types = ref.watch(appointmentTypesProvider);
+
     return AppScaffold(
-      title: 'Book Appointment',
-      showBack: true,
-      body: Stepper(
-        type: StepperType.vertical,
-        currentStep: _currentStep,
-        onStepContinue: _nextStep,
-        onStepCancel: _cancelStep,
-        controlsBuilder: (context, details) {
-          final isLast = _currentStep == 4;
-          return Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ChiromoButton(
-                    label: isLast ? 'Confirm Booking' : 'Continue',
-                    onPressed: () {
-                      if (isLast) {
-                        _submitBooking();
-                      } else {
-                        details.onStepContinue?.call();
-                      }
-                    },
+      title: 'Request an Appointment',
+      body: availability.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => ErrorRetryWidget(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(availabilityProvider),
+        ),
+        data: (doctors) {
+          if (doctors.isEmpty) {
+            return const _NoAvailability();
+          }
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              const _Note(
+                'Choosing a slot sends a request to reception. They will '
+                'confirm it, and you will see it in your appointments once '
+                'they have.',
+              ),
+              const SizedBox(height: 20),
+              const _SectionLabel('DOCTOR'),
+              const SizedBox(height: 8),
+              for (final doctor in doctors)
+                _DoctorTile(
+                  doctor: doctor,
+                  selected: _doctor?.doctorId == doctor.doctorId,
+                  onTap: () => setState(() {
+                    _doctor = doctor;
+                    // A day and slot only mean anything for one doctor, so
+                    // switching doctor clears both rather than carrying over a
+                    // selection that doctor may not offer.
+                    _day = null;
+                    _slot = null;
+                  }),
+                ),
+              if (_doctor != null) ...[
+                const SizedBox(height: 20),
+                const _SectionLabel('DAY'),
+                const SizedBox(height: 8),
+                _DayPicker(
+                  days: _doctor!.availableDates,
+                  selected: _day,
+                  onSelect: (day) => setState(() {
+                    _day = day;
+                    _slot = null;
+                  }),
+                ),
+              ],
+              if (_doctor != null && _day != null) ...[
+                const SizedBox(height: 20),
+                const _SectionLabel('TIME'),
+                const SizedBox(height: 8),
+                _SlotPicker(
+                  slots: _doctor!.slotsOn(_day!),
+                  selected: _slot,
+                  onSelect: (slot) => setState(() => _slot = slot),
+                ),
+              ],
+              const SizedBox(height: 20),
+              const _SectionLabel('APPOINTMENT TYPE'),
+              const SizedBox(height: 8),
+              types.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (_, _) => const Text(
+                  'Types could not be loaded — reception will set this.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: ChiromoColors.textSecondary,
                   ),
                 ),
-                if (_currentStep > 0) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ChiromoButton(
-                      label: 'Back',
-                      variant: ChiromoButtonVariant.outline,
-                      onPressed: details.onStepCancel,
+                data: (items) => _TypePicker(
+                  types: items,
+                  selected: _type,
+                  onSelect: (type) => setState(() => _type = type),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const _SectionLabel('WHAT WOULD YOU LIKE TO DISCUSS?'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _reasonController,
+                maxLines: 3,
+                maxLength: 250,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  hintText: 'Optional — a short note for the clinic',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ChiromoButton(
+                label: 'Send request',
+                isLoading: _saving,
+                onPressed: _canSubmit ? _submit : null,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  bool get _canSubmit =>
+      !_saving && _doctor != null && _day != null && _slot != null;
+
+  Future<void> _submit() async {
+    setState(() => _saving = true);
+
+    try {
+      await ref
+          .read(appAppointmentNotifierProvider.notifier)
+          .book(
+            doctorId: _doctor!.doctorId,
+            date: _day!,
+            // BC matches the diary line on its own slot key, so this sends
+            // what BC gave us rather than a formatted time.
+            slot: _slot!.slot,
+            branch: _doctor!.branch,
+            appointmentType: _type?.code ?? '',
+            reason: _reasonController.text.trim(),
+          );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Request sent. Reception will confirm it shortly.'),
+        ),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+}
+
+class _DoctorTile extends StatelessWidget {
+  final AvailableDoctor doctor;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _DoctorTile({
+    required this.doctor,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = [
+      doctor.specialization,
+      doctor.clinic,
+    ].where((s) => s.isNotEmpty).join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: selected
+                ? ChiromoColors.primarySurface
+                : ChiromoColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? ChiromoColors.primary : ChiromoColors.border,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 20,
+                backgroundColor: ChiromoColors.surfaceVariant,
+                child: Icon(
+                  Icons.person,
+                  size: 22,
+                  color: ChiromoColors.textTertiary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doctor.displayName,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: ChiromoColors.textPrimary,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: ChiromoColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '${doctor.slots.length} slots free',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: ChiromoColors.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                const Icon(
+                  Icons.check_circle,
+                  color: ChiromoColors.primary,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DayPicker extends StatelessWidget {
+  final List<DateTime> days;
+  final DateTime? selected;
+  final ValueChanged<DateTime> onSelect;
+
+  const _DayPicker({
+    required this.days,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 76,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: days.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final day = days[index];
+          final isSelected =
+              selected != null &&
+              selected!.year == day.year &&
+              selected!.month == day.month &&
+              selected!.day == day.day;
+
+          return InkWell(
+            onTap: () => onSelect(day),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 64,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? ChiromoColors.primary
+                    : ChiromoColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected
+                      ? ChiromoColors.primary
+                      : ChiromoColors.border,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _weekday(day),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? Colors.white70
+                          : ChiromoColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected
+                          ? Colors.white
+                          : ChiromoColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    _month(day),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isSelected
+                          ? Colors.white70
+                          : ChiromoColors.textTertiary,
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
           );
         },
-        steps: [
-          Step(
-            title: const Text('Select Branch'),
-            content: ref
-                .watch(branchesProvider)
-                .when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, st) => Text('Error loading branches: $err'),
-                  data: (branches) {
-                    if (branches.isEmpty) {
-                      return const Text('No branches available.');
-                    }
-                    return Column(
-                      children: branches.map((branch) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildChoiceTile(
-                            title: branch.name,
-                            subtitle:
-                                'Book an appointment at our ${branch.name} clinic',
-                            icon: Icons.business_outlined,
-                            isSelected: _selectedBranch?.id == branch.id,
-                            onTap: () =>
-                                setState(() => _selectedBranch = branch),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-            isActive: _currentStep >= 0,
-            state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Consultation Type'),
-            content: Column(
-              children: [
-                _buildChoiceTile(
-                  title: 'In-Person Visit',
-                  subtitle: 'Visit our hospital for a physical checkup',
-                  icon: Icons.local_hospital_outlined,
-                  isSelected: _selectedType == 'in-person',
-                  onTap: () => setState(() => _selectedType = 'in-person'),
-                ),
-                const SizedBox(height: 12),
-                _buildChoiceTile(
-                  title: 'Telemedicine (Video Call)',
-                  subtitle: 'Face-to-face consultation via video',
-                  icon: Icons.videocam_outlined,
-                  isSelected: _selectedType == 'video',
-                  onTap: () => setState(() => _selectedType = 'video'),
-                ),
-                const SizedBox(height: 12),
-                _buildChoiceTile(
-                  title: 'Telemedicine (Voice Call)',
-                  subtitle: 'Consult a doctor over a phone call',
-                  icon: Icons.phone_outlined,
-                  isSelected: _selectedType == 'voice',
-                  onTap: () => setState(() => _selectedType = 'voice'),
-                ),
-                const SizedBox(height: 12),
-                _buildChoiceTile(
-                  title: 'Telemedicine (Chat)',
-                  subtitle: 'Message a doctor securely in the app',
-                  icon: Icons.chat_outlined,
-                  isSelected: _selectedType == 'chat',
-                  onTap: () => setState(() => _selectedType = 'chat'),
-                ),
-              ],
-            ),
-            isActive: _currentStep >= 1,
-            state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Select Specialist'),
-            content: ref
-                .watch(allDoctorsProvider)
-                .when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, st) => Text('Error loading doctors: $e'),
-                  data: (doctors) {
-                    if (doctors.isEmpty) {
-                      return const Text('No specialists available.');
-                    }
-                    return Column(
-                      children: doctors.map((doc) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildChoiceTile(
-                            title:
-                                doc.userProfile?.fullName ?? 'Unknown Doctor',
-                            subtitle: doc.specialty,
-                            icon: Icons.person_outline,
-                            isSelected: _selectedDoctor?.id == doc.id,
-                            onTap: () => setState(() => _selectedDoctor = doc),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-            isActive: _currentStep >= 2,
-            state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Choose Date & Time'),
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                CalendarDatePicker(
-                  initialDate:
-                      _selectedDate ??
-                      DateTime.now().add(const Duration(days: 1)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 60)),
-                  onDateChanged: (date) {
-                    setState(() {
-                      _selectedDate = date;
-                      _selectedTime = null; // reset time when date changes
-                    });
-                  },
-                ),
-                if (_selectedDate != null && _selectedDoctor != null) ...[
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Select Time Slot',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 12),
-                  ref
-                      .watch(
-                        doctorAppointmentsForDateProvider((
-                          _selectedDoctor!.id,
-                          _selectedDate!,
-                        )),
-                      )
-                      .when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (err, st) => Text('Error loading slots: $err'),
-                        data: (existingAppts) {
-                          final bookedTimes = existingAppts
-                              .where(
-                                (a) =>
-                                    a.status != AppConstants.statusCancelled &&
-                                    a.status != AppConstants.statusRejected,
-                              )
-                              .map(
-                                (a) => TimeOfDay(
-                                  hour: a.scheduledAt.toLocal().hour,
-                                  minute: a.scheduledAt.toLocal().minute,
-                                ),
-                              )
-                              .toSet();
-
-                          // Generate slots 9 AM to 4 PM
-                          final slots = List.generate(
-                            8,
-                            (i) => TimeOfDay(hour: 9 + i, minute: 0),
-                          );
-
-                          return Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: slots.map((slot) {
-                              final isBooked = bookedTimes.contains(slot);
-                              final isSelected = _selectedTime == slot;
-                              return InkWell(
-                                onTap: isBooked
-                                    ? null
-                                    : () =>
-                                          setState(() => _selectedTime = slot),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? ChiromoColors.primary
-                                        : (isBooked
-                                              ? ChiromoColors.surfaceVariant
-                                                    .withValues(alpha: 0.5)
-                                              : Colors.transparent),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? ChiromoColors.primary
-                                          : (isBooked
-                                                ? ChiromoColors.border
-                                                      .withValues(alpha: 0.5)
-                                                : ChiromoColors.border),
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    slot.format(context),
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : (isBooked
-                                                ? ChiromoColors.textTertiary
-                                                : ChiromoColors.textPrimary),
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      decoration: isBooked
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
-                ],
-              ],
-            ),
-            isActive: _currentStep >= 3,
-            state: _currentStep > 3 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Confirm Details'),
-            content: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: ChiromoColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Summary',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                  const Divider(),
-                  _buildSummaryRow(
-                    'Branch',
-                    _selectedBranch?.name ?? 'Not selected',
-                  ),
-                  _buildSummaryRow(
-                    'Type',
-                    _selectedType == 'video'
-                        ? 'Video Call'
-                        : _selectedType == 'voice'
-                        ? 'Voice Call'
-                        : _selectedType == 'chat'
-                        ? 'Chat'
-                        : 'In-Person',
-                  ),
-                  _buildSummaryRow(
-                    'Doctor',
-                    _selectedDoctor?.userProfile?.fullName ?? 'Not selected',
-                  ),
-                  _buildSummaryRow(
-                    'Date',
-                    _selectedDate?.toString().split(' ')[0] ?? 'Not selected',
-                  ),
-                  _buildSummaryRow(
-                    'Time',
-                    _selectedTime?.format(context) ?? 'Not selected',
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: const Text('Repeat Weekly?'),
-                    subtitle: const Text('Book 4 sessions at this same time'),
-                    value: _isRecurring,
-                    onChanged: (val) => setState(() => _isRecurring = val),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
-            isActive: _currentStep >= 4,
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _submitBooking() async {
-    if (_selectedBranch == null ||
-        _selectedType == null ||
-        _selectedDoctor == null ||
-        _selectedDate == null ||
-        _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all steps')),
+  static String _weekday(DateTime date) {
+    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return names[date.weekday - 1];
+  }
+
+  static String _month(DateTime date) {
+    const names = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return names[date.month - 1];
+  }
+}
+
+class _SlotPicker extends StatelessWidget {
+  final List<DoctorSlot> slots;
+  final DoctorSlot? selected;
+  final ValueChanged<DoctorSlot> onSelect;
+
+  const _SlotPicker({
+    required this.slots,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (slots.isEmpty) {
+      return const Text(
+        'Nothing free that day.',
+        style: TextStyle(fontSize: 13, color: ChiromoColors.textSecondary),
       );
-      return;
     }
 
-    final user = ref.read(authStateProvider).valueOrNull;
-    if (user == null) return;
-
-    try {
-      final repo = ref.read(appointmentRepositoryProvider);
-
-      final numSessions = _isRecurring ? 4 : 1;
-
-      for (int i = 0; i < numSessions; i++) {
-        final date = _selectedDate!.add(Duration(days: i * 7));
-        final model = AppointmentModel(
-          id: '',
-          patientId: user.id,
-          doctorId: _selectedDoctor!.id,
-          branchId: _selectedBranch!.id,
-          scheduledAt: DateTime(
-            date.year,
-            date.month,
-            date.day,
-            _selectedTime!.hour,
-            _selectedTime!.minute,
-          ),
-          status: AppConstants.statusPending,
-          type: _selectedType!,
-          notes: null,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        await repo.bookAppointment(model);
-      }
-
-      // Refresh patient appointments
-      ref.invalidate(patientAppointmentsProvider);
-      // Also refresh doctor appointments for date so it disables correctly
-      ref.invalidate(doctorAppointmentsForDateProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isRecurring
-                  ? 'All 4 recurring appointments booked successfully!'
-                  : 'Appointment booked successfully!',
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final slot in slots)
+          ChoiceChip(
+            label: Text(slot.label),
+            selected: selected?.slot == slot.slot,
+            onSelected: (_) => onSelect(slot),
+            selectedColor: ChiromoColors.primary,
+            labelStyle: TextStyle(
+              color: selected?.slot == slot.slot
+                  ? Colors.white
+                  : ChiromoColors.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        );
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
+      ],
+    );
   }
+}
 
-  Widget _buildSummaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: ChiromoColors.textSecondary),
+class _TypePicker extends StatelessWidget {
+  final List<AppointmentType> types;
+  final AppointmentType? selected;
+  final ValueChanged<AppointmentType> onSelect;
+
+  const _TypePicker({
+    required this.types,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (types.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final type in types)
+          ChoiceChip(
+            label: Text(type.label),
+            selected: selected?.code == type.code,
+            onSelected: (_) => onSelect(type),
+            selectedColor: ChiromoColors.primary,
+            labelStyle: TextStyle(
+              color: selected?.code == type.code
+                  ? Colors.white
+                  : ChiromoColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
+      ],
+    );
+  }
+}
+
+class _NoAvailability extends StatelessWidget {
+  const _NoAvailability();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_busy_outlined,
+              size: 64,
+              color: ChiromoColors.primaryLighter,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No slots in the next two weeks',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: ChiromoColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please check back shortly, or call the clinic if it is urgent.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: ChiromoColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildChoiceTile({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      onTap: onTap,
-      shape: RoundedRectangleBorder(
+class _Note extends StatelessWidget {
+  final String text;
+
+  const _Note(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ChiromoColors.goldSurface,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isSelected ? ChiromoColors.primary : ChiromoColors.border,
-          width: isSelected ? 2 : 1,
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          height: 1.5,
+          color: ChiromoColors.textPrimary,
         ),
       ),
-      tileColor: isSelected ? ChiromoColors.primarySurface : null,
-      leading: Icon(
-        icon,
-        color: isSelected ? ChiromoColors.primary : ChiromoColors.textSecondary,
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: ChiromoColors.textTertiary,
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected ? ChiromoColors.primary : ChiromoColors.textPrimary,
-        ),
-      ),
-      subtitle: Text(subtitle),
-      trailing: isSelected
-          ? const Icon(Icons.check_circle, color: ChiromoColors.primary)
-          : null,
     );
   }
 }
