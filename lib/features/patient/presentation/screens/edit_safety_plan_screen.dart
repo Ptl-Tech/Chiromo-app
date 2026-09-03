@@ -12,7 +12,8 @@ class EditSafetyPlanScreen extends ConsumerStatefulWidget {
   const EditSafetyPlanScreen({super.key});
 
   @override
-  ConsumerState<EditSafetyPlanScreen> createState() => _EditSafetyPlanScreenState();
+  ConsumerState<EditSafetyPlanScreen> createState() =>
+      _EditSafetyPlanScreenState();
 }
 
 class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
@@ -37,9 +38,11 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
           _existingPlanId = existingPlan.id;
           _createdAt = existingPlan.createdAt;
           _warningSignsController.text = existingPlan.warningSigns ?? '';
-          _copingStrategiesController.text = existingPlan.copingStrategies ?? '';
+          _copingStrategiesController.text =
+              existingPlan.copingStrategies ?? '';
           _reasonsToLiveController.text = existingPlan.reasonsToLive ?? '';
-          _professionalContactsController.text = existingPlan.professionalContacts ?? '';
+          _professionalContactsController.text =
+              existingPlan.professionalContacts ?? '';
         });
       }
     });
@@ -56,12 +59,12 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
 
   void _savePlan() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final user = ref.read(authNotifierProvider).valueOrNull;
     if (user == null) return;
 
     setState(() => _isSaving = true);
-    
+
     try {
       final repo = ref.read(emergencyRepositoryProvider);
       final newPlan = SafetyPlanEntity(
@@ -76,10 +79,10 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
       );
 
       await repo.upsertSafetyPlan(newPlan);
-      
+
       // Refresh provider
       ref.invalidate(safetyPlanProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Safety plan saved successfully')),
@@ -88,9 +91,9 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving plan: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving plan: $e')));
       }
     } finally {
       if (mounted) {
@@ -117,7 +120,9 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
                   children: [
                     Text(
                       'Create Your Safety Plan',
-                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -128,7 +133,8 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
 
                     _buildSection(
                       title: 'Step 1: Warning Signs',
-                      description: 'What thoughts, images, moods, situations, or behaviors indicate that a crisis may be developing?',
+                      description:
+                          'What thoughts, images, moods, situations, or behaviors indicate that a crisis may be developing?',
                       controller: _warningSignsController,
                       hint: 'e.g., isolating myself, sleeping too much...',
                     ),
@@ -136,15 +142,18 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
 
                     _buildSection(
                       title: 'Step 2: Internal Coping Strategies',
-                      description: 'What can I do, on my own, if I become suicidal again, to help myself not to act on my thoughts or urges?',
+                      description:
+                          'What can I do, on my own, if I become suicidal again, to help myself not to act on my thoughts or urges?',
                       controller: _copingStrategiesController,
-                      hint: 'e.g., deep breathing, going for a walk, listening to music...',
+                      hint:
+                          'e.g., deep breathing, going for a walk, listening to music...',
                     ),
                     const SizedBox(height: 24),
 
                     _buildSection(
                       title: 'Step 3: Reasons to Live',
-                      description: 'What are the things that are most important to me and worth living for?',
+                      description:
+                          'What are the things that are most important to me and worth living for?',
                       controller: _reasonsToLiveController,
                       hint: 'e.g., my family, my pets, future goals...',
                     ),
@@ -152,7 +161,8 @@ class _EditSafetyPlanScreenState extends ConsumerState<EditSafetyPlanScreen> {
 
                     _buildSection(
                       title: 'Step 4: Professional Contacts',
-                      description: 'Professionals or agencies I can contact during a crisis.',
+                      description:
+                          'Professionals or agencies I can contact during a crisis.',
                       controller: _professionalContactsController,
                       hint: 'e.g., Dr. Smith, Therapist Name...',
                     ),

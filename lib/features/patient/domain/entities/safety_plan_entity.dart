@@ -23,13 +23,13 @@ class SafetyPlanEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        patientId,
-        warningSigns,
-        copingStrategies,
-        reasonsToLive,
-        professionalContacts,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    patientId,
+    warningSigns,
+    copingStrategies,
+    reasonsToLive,
+    professionalContacts,
+    createdAt,
+    updatedAt,
+  ];
 }

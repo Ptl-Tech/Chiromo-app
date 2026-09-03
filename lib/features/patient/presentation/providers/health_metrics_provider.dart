@@ -27,7 +27,9 @@ class HealthMetric {
 }
 
 /// Provider that fetches a list of health metrics for the current patient.
-final healthMetricsProvider = FutureProvider.autoDispose<List<HealthMetric>>((ref) async {
+final healthMetricsProvider = FutureProvider.autoDispose<List<HealthMetric>>((
+  ref,
+) async {
   // Use the authStateProvider to get the current authenticated user
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) return [];

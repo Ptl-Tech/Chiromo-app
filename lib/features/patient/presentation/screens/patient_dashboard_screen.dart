@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../widgets/layouts/app_scaffold.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../notifications/presentation/providers/notification_providers.dart';
-import '../../domain/entities/cbt_exercise_entity.dart';
-import '../../presentation/providers/cbt_providers.dart';
+import '../../data/models/checkin_model.dart';
+import '../providers/checkin_providers.dart';
 import '../widgets/patient_dashboard_widgets.dart';
 import 'package:chiromo/theme/chiromo_colors.dart';
 import 'package:chiromo/widgets/loading/shimmer_loading.dart';
@@ -20,27 +20,19 @@ class PatientDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authNotifierProvider).valueOrNull;
     final theme = Theme.of(context);
-    final recentProgress = ref.watch(cbtRecentProgressProvider);
+    final moodTrend = ref.watch(moodTrendProvider);
 
     String dayStreak = '-';
     String avgMood = '-';
-    final bool hasSubmittedMoodToday = recentProgress.when(
-      data: (exercises) {
-        final checkins = exercises
-            .where(
-              (e) => e.type == CbtExerciseType.dailyCheckin && e.mood != null,
-            )
-            .toList();
-        if (checkins.isNotEmpty) {
-          // Compute stats
-          final sum = checkins.fold<int>(0, (prev, e) => prev + (e.mood ?? 0));
-          avgMood = '${(sum / checkins.length).toStringAsFixed(1)}/10';
-          dayStreak = checkins.length.toString();
-          // Ensure checkins are sorted by date to get the most recent entry
-          checkins.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-          final lastCheckin = checkins.last;
+    final bool hasSubmittedMoodToday = moodTrend.when(
+      data: (points) {
+        if (points.isNotEmpty) {
+          // Compute stats. Points arrive oldest-first, so the last is newest.
+          final sum = points.fold<int>(0, (prev, p) => prev + p.value);
+          avgMood = '${(sum / points.length).toStringAsFixed(1)}/10';
+          dayStreak = points.length.toString();
           final now = DateTime.now();
-          return now.difference(lastCheckin.createdAt).inHours < 6;
+          return now.difference(points.last.date).inHours < 6;
         }
         return false;
       },
@@ -340,31 +332,17 @@ class PatientDashboardScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Mood chart wired to recent CBT daily check-ins
+                  // Mood chart, wired to the Business-Central-backed check-ins
                   ref
-                      .watch(cbtRecentProgressProvider)
+                      .watch(moodTrendProvider)
                       .when(
                         loading: () => const ShimmerCard(height: 140),
                         error: (e, st) => ErrorRetryWidget(
                           message: 'Failed to load mood chart',
-                          onRetry: () =>
-                              ref.invalidate(cbtRecentProgressProvider),
+                          onRetry: () => ref.invalidate(checkinHistoryProvider),
                         ),
-                        data: (exercises) {
-                          final checkins =
-                              exercises
-                                  .where(
-                                    (e) =>
-                                        e.type ==
-                                            CbtExerciseType.dailyCheckin &&
-                                        (e.mood != null),
-                                  )
-                                  .toList()
-                                ..sort(
-                                  (a, b) => a.createdAt.compareTo(b.createdAt),
-                                );
-
-                          if (checkins.isEmpty) {
+                        data: (points) {
+                          if (points.isEmpty) {
                             return Container(
                               height: 140,
                               alignment: Alignment.center,
@@ -389,16 +367,16 @@ class PatientDashboardScreen extends ConsumerWidget {
                           }
 
                           // take last 7 values
-                          final recentCheckins = checkins.reversed
+                          final recentPoints = points.reversed
                               .take(7)
                               .toList()
                               .reversed
                               .toList();
-                          final chartData = recentCheckins
+                          final chartData = recentPoints
                               .map(
-                                (e) => _ChartDataPoint(
-                                  date: e.createdAt,
-                                  mood: (e.mood ?? 0).clamp(0, 10).toInt(),
+                                (p) => _ChartDataPoint(
+                                  date: p.date,
+                                  mood: p.value.clamp(0, 10),
                                 ),
                               )
                               .toList();
@@ -422,6 +400,9 @@ class PatientDashboardScreen extends ConsumerWidget {
     ); // AppScaffold
   }
 
+  /// Records a one-tap mood score as a check-in carrying just that rating.
+  /// It is the same kind of entry the full check-in screen creates, so the two
+  /// land in one place and feed the same trend.
   void _saveMood(
     BuildContext context,
     WidgetRef ref,
@@ -432,23 +413,20 @@ class PatientDashboardScreen extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref
-          .read(cbtRepositoryProvider)
-          .createExercise(
-            CbtExerciseEntity(
-              id: '',
-              patientId: patientId,
-              type: CbtExerciseType.dailyCheckin,
-              data: {'mood': score},
-              isShared: false,
-              hasDoctorFeedback: false,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
+          .read(checkinNotifierProvider.notifier)
+          .saveCheckin(
+            // From the device clock: BC's default would stamp a late-night
+            // entry with the server's date, which can be a day behind.
+            recordedAt: DateTime.now(),
+            notes: '',
+            shareWithDoctor: false,
+            ratings: [
+              Rating(typeCode: kMoodRatingCode, value: score, bandCaption: ''),
+            ],
           );
       messenger.showSnackBar(
         const SnackBar(content: Text('Mood saved successfully!')),
       );
-      ref.invalidate(cbtRecentProgressProvider);
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to save mood: $e')),

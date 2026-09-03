@@ -38,18 +38,40 @@ abstract class AuthRepository {
     required String newPassword,
   });
 
-  /// Update password.
-  Future<void> updatePassword(String newPassword);
+  /// Change the signed-in user's password. Unlike [confirmPasswordReset]
+  /// this proves identity with the current password rather than an OTP.
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 
-  /// Update the current user's profile fields.
+  /// Ask the API to email an OTP for verifying [email].
+  Future<void> sendVerificationOtp(String email);
+
+  /// Confirm an email address with the OTP sent by [sendVerificationOtp].
+  Future<void> verifyEmail({required String email, required String otpCode});
+
+  /// Partially update the current user's profile and return the saved result.
+  ///
+  /// A null argument leaves that field untouched; an empty string clears it.
+  /// Email is not editable here — it is the identity the API issues tokens
+  /// against.
   Future<UserEntity> updateProfile({
     String? firstName,
+    String? middleName,
     String? lastName,
     String? phone,
+    String? gender,
+    String? idNumber,
     String? avatarUrl,
     DateTime? dateOfBirth,
     String? bio,
   });
+
+  /// Deactivate the current user's account and sign them out. The Business
+  /// Central record is retained — clinical history references it — but it can
+  /// no longer be used to sign in.
+  Future<void> deactivateAccount();
 
   /// Sign out the current user.
   Future<void> signOut();

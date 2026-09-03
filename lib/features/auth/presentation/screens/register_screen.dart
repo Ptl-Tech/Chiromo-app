@@ -33,7 +33,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(authNotifierProvider.notifier).signUpWithEmail(
+    await ref
+        .read(authNotifierProvider.notifier)
+        .signUpWithEmail(
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
           fullName: _nameCtrl.text.trim(),
@@ -99,19 +101,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Join Chiromo Hospital Group',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Create a patient account to book appointments and manage your health records.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: ChiromoColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ChiromoColors.textSecondary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 36),
@@ -124,12 +124,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: ChiromoColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: ChiromoColors.error.withValues(alpha: 0.3)),
+                          color: ChiromoColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         '${authState.error}',
                         style: const TextStyle(
-                            color: ChiromoColors.error, fontSize: 13),
+                          color: ChiromoColors.error,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
 
@@ -138,7 +141,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     label: 'Full Name',
                     hint: 'John Doe',
                     prefixIcon: Icons.person_outline,
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -148,7 +152,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     hint: '+254 700 000000',
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -173,9 +178,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscure,
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined),
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                     validator: (v) {
@@ -192,12 +199,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onPressed: _signUp,
                   ),
                   const SizedBox(height: 24),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Already have an account?",
-                          style: TextStyle(color: ChiromoColors.textSecondary)),
+                      Text(
+                        "Already have an account?",
+                        style: TextStyle(color: ChiromoColors.textSecondary),
+                      ),
                       TextButton(
                         onPressed: () => context.go('/login'),
                         child: const Text('Sign In'),

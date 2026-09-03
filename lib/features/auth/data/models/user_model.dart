@@ -11,6 +11,8 @@ class UserModel {
   final String? phoneNumber;
   final String? gender;
   final String? idNumber;
+  final String? bio;
+  final String? avatarUrl;
   final DateTime? dateOfBirth;
   final DateTime? dateRegistered;
   final bool emailVerified;
@@ -23,6 +25,8 @@ class UserModel {
     this.phoneNumber,
     this.gender,
     this.idNumber,
+    this.bio,
+    this.avatarUrl,
     this.dateOfBirth,
     this.dateRegistered,
     this.emailVerified = false,
@@ -45,6 +49,8 @@ class UserModel {
       phoneNumber: json['phoneNumber'] as String?,
       gender: json['gender'] as String?,
       idNumber: json['idNumber'] as String?,
+      bio: json['bio'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
       dateOfBirth: _parseDate(json['dateOfBirth']),
       dateRegistered: _parseDate(json['dateRegistered']),
       emailVerified: json['emailVerified'] as bool? ?? false,
@@ -58,10 +64,9 @@ class UserModel {
 
   /// Convert to domain entity.
   ///
-  /// Business Central's PublicUser has no internal id, role, avatar, or
-  /// profile metadata, so email is used as the stable identifier and the
-  /// remaining fields fall back to sensible defaults until the rest of the
-  /// app's profile data is migrated off Supabase.
+  /// Business Central's PublicUser has no internal id or role, so email is
+  /// used as the stable identifier and role falls back to patient — the app's
+  /// staff roles still live outside BC's "App User" table.
   UserEntity toEntity() {
     final now = DateTime.now();
     return UserEntity(
@@ -71,11 +76,12 @@ class UserModel {
       phone: phoneNumber,
       gender: gender,
       idNumber: idNumber,
-      avatarUrl: null,
+      avatarUrl: (avatarUrl?.isEmpty ?? true) ? null : avatarUrl,
       dateOfBirth: dateOfBirth,
-      bio: null,
+      bio: (bio?.isEmpty ?? true) ? null : bio,
       role: UserRole.patient,
       branchId: null,
+      emailVerified: emailVerified,
       createdAt: dateRegistered ?? now,
       updatedAt: now,
     );

@@ -139,34 +139,6 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
     final widgets = <Widget>[];
 
     switch (exercise.type) {
-      case CbtExerciseType.dailyCheckin:
-        widgets.addAll([
-          _buildMetricsSection(
-            title: 'Daily Check-in',
-            children: [
-              _MetricCard(
-                icon: Icons.sentiment_satisfied_alt_rounded,
-                label: 'Mood',
-                value: '${exercise.mood ?? 0}/10',
-                color: const Color(0xFFFFC107),
-              ),
-              _MetricCard(
-                icon: Icons.sentiment_very_dissatisfied,
-                label: 'Anxiety',
-                value: '${exercise.anxiety ?? 0}/10',
-                color: const Color(0xFFFF6B6B),
-              ),
-              _MetricCard(
-                icon: Icons.nights_stay_rounded,
-                label: 'Sleep',
-                value: '${exercise.sleepHours ?? 0}h',
-                color: const Color(0xFF2196F3),
-              ),
-            ],
-          ),
-        ]);
-        break;
-
       case CbtExerciseType.thoughtRecord:
         widgets.addAll([
           _buildSectionTitle('Situation'),
@@ -384,8 +356,7 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
         }
         break;
       case CbtExerciseType.behavioralActivation:
-      case CbtExerciseType.dailyCheckin:
-        // These types don't have reflection questions
+        // This type doesn't have reflection questions
         break;
     }
 
@@ -424,8 +395,6 @@ class CbtExerciseDetailsScreen extends StatelessWidget {
 
   IconData _getIconForType(CbtExerciseType type) {
     switch (type) {
-      case CbtExerciseType.dailyCheckin:
-        return Icons.event_note_rounded;
       case CbtExerciseType.thoughtRecord:
         return Icons.psychology_outlined;
       case CbtExerciseType.behavioralActivation:

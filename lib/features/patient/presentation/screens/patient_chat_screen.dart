@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../theme/chiromo_colors.dart';
 import '../../../../widgets/layouts/app_scaffold.dart';
-import '../providers/cbt_providers.dart';
 import '../providers/chat_providers.dart';
-import '../../domain/entities/cbt_exercise_entity.dart';
+import '../providers/checkin_providers.dart';
 
 class PatientChatScreen extends ConsumerStatefulWidget {
   final String doctorId;
@@ -245,7 +244,8 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
                         showTitles: true,
                         reservedSize: 28,
                         getTitlesWidget: (value, meta) {
-                          if (value.toInt() < 0 || value.toInt() >= data.length) {
+                          if (value.toInt() < 0 ||
+                              value.toInt() >= data.length) {
                             return const SizedBox.shrink();
                           }
                           return SideTitleWidget(
@@ -297,22 +297,17 @@ class _PatientChatScreenState extends ConsumerState<PatientChatScreen> {
       patientChatMessagesProvider(widget.doctorId),
     );
 
-    final recentProgress = ref.watch(cbtRecentProgressProvider);
-    final List<double> chartData = recentProgress.when(
-      data: (exercises) {
-        final checkins = exercises
-            .where((e) => e.type == CbtExerciseType.dailyCheckin)
-            .toList();
-        return checkins.reversed
-            .take(7)
-            .map((e) => (e.data['mood'] as num?)?.toDouble() ?? 0.0)
-            .toList()
-            .reversed
-            .toList();
-      },
-      loading: () => [],
-      error: (_, _) => [],
-    );
+    final List<double> chartData = ref
+        .watch(moodTrendProvider)
+        .when(
+          // Points are oldest-first, so take the tail for the last seven.
+          data: (points) => points
+              .sublist(points.length > 7 ? points.length - 7 : 0)
+              .map((p) => p.value.toDouble())
+              .toList(),
+          loading: () => [],
+          error: (_, _) => [],
+        );
 
     return AppScaffold(
       title: 'Chat with ${widget.doctorName}',

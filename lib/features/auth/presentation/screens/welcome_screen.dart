@@ -41,7 +41,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       qualifications: 'MD, MMed (Psychiatry)',
       rating: 4.9,
       imagePath: 'assets/images/doctors/doctor_female_1.png',
-      quote: 'Recovery is a path of restoration and dignity. Let\'s walk it together.',
+      quote:
+          'Recovery is a path of restoration and dignity. Let\'s walk it together.',
     ),
     MockWelcomeDoctor(
       name: 'Dr. David Omondi',
@@ -49,7 +50,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       qualifications: 'PhD in Clinical Psychology',
       rating: 4.8,
       imagePath: 'assets/images/doctors/doctor_male_1.png',
-      quote: 'Understanding your emotional wellness is the first step towards healing.',
+      quote:
+          'Understanding your emotional wellness is the first step towards healing.',
     ),
     MockWelcomeDoctor(
       name: 'Dr. Sarah Chen',
@@ -57,7 +59,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       qualifications: 'MA in Counseling Psychology',
       rating: 4.9,
       imagePath: 'assets/images/doctors/doctor_female_2.png',
-      quote: 'Providing a safe space for growth, resilience, and positive change.',
+      quote:
+          'Providing a safe space for growth, resilience, and positive change.',
     ),
     MockWelcomeDoctor(
       name: 'Dr. James Musembi',
@@ -189,7 +192,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Welcome Message
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -199,7 +202,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       'Your Mental Health Partner',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: isDark ? ChiromoColors.darkTextPrimary : ChiromoColors.textPrimary,
+                        color: isDark
+                            ? ChiromoColors.darkTextPrimary
+                            : ChiromoColors.textPrimary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -207,7 +212,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     Text(
                       'Connect with leading psychiatrists, psychologists, and specialists. Access tools and guidance to support your recovery.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? ChiromoColors.darkTextSecondary : ChiromoColors.textSecondary,
+                        color: isDark
+                            ? ChiromoColors.darkTextSecondary
+                            : ChiromoColors.textSecondary,
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
@@ -238,16 +245,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           ),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isDark ? ChiromoColors.darkSurface : Colors.white,
+                              color: isDark
+                                  ? ChiromoColors.darkSurface
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: isDark
                                     ? ChiromoColors.darkBorder
-                                    : ChiromoColors.border.withValues(alpha: 0.5),
+                                    : ChiromoColors.border.withValues(
+                                        alpha: 0.5,
+                                      ),
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.2 : 0.05,
+                                  ),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -266,16 +279,19 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         Image.asset(
                                           doctor.imagePath,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Container(
-                                              color: ChiromoColors.primarySurface,
-                                              child: const Icon(
-                                                Icons.person,
-                                                size: 80,
-                                                color: ChiromoColors.primary,
-                                              ),
-                                            );
-                                          },
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                                return Container(
+                                                  color: ChiromoColors
+                                                      .primarySurface,
+                                                  child: const Icon(
+                                                    Icons.person,
+                                                    size: 80,
+                                                    color:
+                                                        ChiromoColors.primary,
+                                                  ),
+                                                );
+                                              },
                                         ),
                                         // Gradient overlay for readability
                                         Positioned(
@@ -290,7 +306,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                 end: Alignment.bottomCenter,
                                                 colors: [
                                                   Colors.transparent,
-                                                  (isDark ? ChiromoColors.darkSurface : Colors.white).withValues(alpha: 0.8),
+                                                  (isDark
+                                                          ? ChiromoColors
+                                                                .darkSurface
+                                                          : Colors.white)
+                                                      .withValues(alpha: 0.8),
                                                 ],
                                               ),
                                             ),
@@ -305,8 +325,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.6),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.6,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Row(
                                               children: [
@@ -336,32 +359,39 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             doctor.name,
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             '${doctor.specialty} • ${doctor.qualifications}',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: ChiromoColors.primary,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: ChiromoColors.primary,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
                                             '"${doctor.quote}"',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              fontStyle: FontStyle.italic,
-                                              color: isDark
-                                                  ? ChiromoColors.darkTextSecondary
-                                                  : ChiromoColors.textSecondary,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontStyle: FontStyle.italic,
+                                                  color: isDark
+                                                      ? ChiromoColors
+                                                            .darkTextSecondary
+                                                      : ChiromoColors
+                                                            .textSecondary,
+                                                ),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -391,7 +421,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               onTap: () => _goToPage(_currentPage - 1),
                               child: const Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                                child: Icon(
+                                  Icons.chevron_left,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                               ),
                             ),
                           ),
@@ -412,7 +446,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               onTap: () => _goToPage(_currentPage + 1),
                               child: const Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.chevron_right, color: Colors.white, size: 28),
+                                child: Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                               ),
                             ),
                           ),
@@ -421,7 +459,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ],
                 ),
               ),
-              
+
               // Page Indicator + Counter
               const SizedBox(height: 12),
               Row(
@@ -436,7 +474,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     decoration: BoxDecoration(
                       color: _currentPage == index
                           ? ChiromoColors.primary
-                          : (isDark ? ChiromoColors.darkBorder : ChiromoColors.border),
+                          : (isDark
+                                ? ChiromoColors.darkBorder
+                                : ChiromoColors.border),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -446,7 +486,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               Text(
                 '${_currentPage + 1} of ${_doctors.length}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? ChiromoColors.darkTextSecondary : ChiromoColors.textTertiary,
+                  color: isDark
+                      ? ChiromoColors.darkTextSecondary
+                      : ChiromoColors.textTertiary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -454,7 +496,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
               // Bottom Actions
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
                 child: Column(
                   children: [
                     ChiromoButton(

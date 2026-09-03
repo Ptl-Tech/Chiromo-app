@@ -21,12 +21,12 @@ class EmergencyContactEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        patientId,
-        name,
-        phoneNumber,
-        relationship,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    patientId,
+    name,
+    phoneNumber,
+    relationship,
+    createdAt,
+    updatedAt,
+  ];
 }

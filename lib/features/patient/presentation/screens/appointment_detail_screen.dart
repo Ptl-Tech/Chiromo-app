@@ -126,7 +126,9 @@ class _AppointmentDetailScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Appointment'),
-        content: const Text('Are you sure you want to cancel this appointment? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to cancel this appointment? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -377,15 +379,23 @@ class _AppointmentDetailScreenState
                             ),
                           ),
                         ),
-                        if (appt.status != AppConstants.statusCancelled && appt.status != AppConstants.statusCompleted && appt.status != AppConstants.statusRejected) ...[
+                        if (appt.status != AppConstants.statusCancelled &&
+                            appt.status != AppConstants.statusCompleted &&
+                            appt.status != AppConstants.statusRejected) ...[
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
-                            onPressed: _isProcessing ? null : _cancelAppointment,
+                            onPressed: _isProcessing
+                                ? null
+                                : _cancelAppointment,
                             icon: const Icon(Icons.cancel_outlined),
                             label: const Text('Cancel Appointment'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context).colorScheme.error,
-                              side: BorderSide(color: Theme.of(context).colorScheme.error),
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),

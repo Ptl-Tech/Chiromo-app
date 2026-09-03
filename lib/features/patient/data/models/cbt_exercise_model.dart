@@ -23,8 +23,12 @@ class CbtExerciseModel extends CbtExerciseEntity {
       data: Map<String, dynamic>.from(json['data'] as Map? ?? {}),
       isShared: json['is_shared'] as bool? ?? false,
       hasDoctorFeedback: json['has_doctor_feedback'] as bool? ?? false,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : DateTime.now(),
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'].toString()) : DateTime.now(),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'].toString())
+          : DateTime.now(),
     );
   }
 

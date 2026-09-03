@@ -350,6 +350,30 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                             'Contact us or view FAQs',
                             onTap: _showHelpSupport,
                           ),
+                          const Divider(height: 32),
+                          _buildSectionHeader('Account & Security'),
+                          if (user != null && !user.emailVerified) ...[
+                            _buildProfileTile(
+                              Icons.mark_email_unread_outlined,
+                              'Verify Email',
+                              'Your email address is not confirmed yet',
+                              onTap: () => _showVerifyEmailSheet(user.email),
+                            ),
+                            const Divider(height: 32),
+                          ],
+                          _buildProfileTile(
+                            Icons.lock_outline,
+                            'Change Password',
+                            'Update the password you sign in with',
+                            onTap: _showChangePasswordSheet,
+                          ),
+                          const Divider(height: 32),
+                          _buildProfileTile(
+                            Icons.person_off_outlined,
+                            'Deactivate Account',
+                            'Close your account and sign out',
+                            onTap: _confirmDeactivateAccount,
+                          ),
                           const SizedBox(height: 20),
                           ChiromoButton(
                             label: 'Sign Out',
@@ -588,28 +612,13 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                                     final updatedUser = await ref
                                         .read(authRepositoryProvider)
                                         .updateProfile(
-                                          firstName:
-                                              firstNameController.text
-                                                  .trim()
-                                                  .isEmpty
-                                              ? null
-                                              : firstNameController.text.trim(),
-                                          lastName:
-                                              lastNameController.text
-                                                  .trim()
-                                                  .isEmpty
-                                              ? null
-                                              : lastNameController.text.trim(),
-                                          phone:
-                                              phoneController.text
-                                                  .trim()
-                                                  .isEmpty
-                                              ? null
-                                              : phoneController.text.trim(),
+                                          firstName: firstNameController.text
+                                              .trim(),
+                                          lastName: lastNameController.text
+                                              .trim(),
+                                          phone: phoneController.text.trim(),
                                           dateOfBirth: selectedDob,
-                                          bio: bioController.text.trim().isEmpty
-                                              ? null
-                                              : bioController.text.trim(),
+                                          bio: bioController.text.trim(),
                                         );
                                     ref
                                         .read(authNotifierProvider.notifier)
@@ -1144,9 +1153,343 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
         if (user == null) throw StateError('Not signed in');
         final updated = await ref
             .read(authRepositoryProvider)
-            .updateProfile(phone: val.isEmpty ? null : val);
+            .updateProfile(phone: val.trim());
         ref.read(authNotifierProvider.notifier).updateCurrentUser(updated);
       },
     );
+  }
+
+  /// Strips the "Exception: " prefix Dart adds when an [Exception] carrying a
+  /// server message is stringified, so the API's own wording reaches the user.
+  String _errorText(Object error) =>
+      error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+
+  Future<void> _showChangePasswordSheet() async {
+    final currentController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var submitting = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            Future<void> submit() async {
+              if (!formKey.currentState!.validate()) return;
+              final messenger = ScaffoldMessenger.of(context);
+              setSheetState(() => submitting = true);
+              try {
+                await ref
+                    .read(authNotifierProvider.notifier)
+                    .changePassword(
+                      currentPassword: currentController.text,
+                      newPassword: newController.text,
+                    );
+                if (ctx.mounted) Navigator.of(ctx).pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Password changed successfully'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                setSheetState(() => submitting = false);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(_errorText(e)),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Change Password',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                      TextFormField(
+                        controller: currentController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Current password',
+                        ),
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Enter your current password'
+                            : null,
+                      ),
+                      TextFormField(
+                        controller: newController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'New password',
+                          helperText:
+                              'At least 8 characters, with upper and lower '
+                              'case, a number and a symbol',
+                          helperMaxLines: 2,
+                        ),
+                        validator: _validateNewPassword,
+                      ),
+                      TextFormField(
+                        controller: confirmController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm new password',
+                        ),
+                        validator: (v) => v != newController.text
+                            ? 'Passwords do not match'
+                            : null,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: submitting
+                                  ? null
+                                  : () => Navigator.of(ctx).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: submitting ? null : submit,
+                              child: submitting
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Update'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Mirrors the API's password rule so the user is told what is wrong before
+  /// a round trip, rather than getting the server validator's raw output.
+  String? _validateNewPassword(String? value) {
+    final password = value ?? '';
+    if (password.length < 8) return 'Use at least 8 characters';
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Include an upper case letter';
+    }
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      return 'Include a lower case letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) return 'Include a number';
+    if (!RegExp(r'[^a-zA-Z0-9]').hasMatch(password)) {
+      return 'Include a symbol';
+    }
+    return null;
+  }
+
+  Future<void> _showVerifyEmailSheet(String email) async {
+    final otpController = TextEditingController();
+    var submitting = false;
+    var sending = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final notifier = ref.read(authNotifierProvider.notifier);
+            final messenger = ScaffoldMessenger.of(context);
+
+            Future<void> sendCode() async {
+              setSheetState(() => sending = true);
+              try {
+                await notifier.sendVerificationOtp(email);
+                setSheetState(() => sending = false);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Verification code sent to $email'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                setSheetState(() => sending = false);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(_errorText(e)),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+
+            Future<void> submit() async {
+              final code = otpController.text.trim();
+              if (code.isEmpty) return;
+              setSheetState(() => submitting = true);
+              try {
+                await notifier.verifyEmail(email: email, otpCode: code);
+                if (ctx.mounted) Navigator.of(ctx).pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Email verified'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                setSheetState(() => submitting = false);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(_errorText(e)),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Verify Email',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Send a code to $email, then enter it below.',
+                      style: const TextStyle(
+                        color: ChiromoColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: otpController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Verification code',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: sending ? null : sendCode,
+                        child: Text(sending ? 'Sending...' : 'Send me a code'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: submitting ? null : submit,
+                      child: submitting
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Verify'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeactivateAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Deactivate account?'),
+        content: const Text(
+          'You will be signed out and will no longer be able to sign in. '
+          'Your clinical records are kept by the hospital. To come back, '
+          'contact Client Services.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Deactivate'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authNotifierProvider.notifier).deactivateAccount();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Your account has been deactivated'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(_errorText(e)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }

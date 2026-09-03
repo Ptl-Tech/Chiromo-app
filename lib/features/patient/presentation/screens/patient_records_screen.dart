@@ -9,10 +9,12 @@ class PatientRecordsScreen extends ConsumerStatefulWidget {
   const PatientRecordsScreen({super.key});
 
   @override
-  ConsumerState<PatientRecordsScreen> createState() => _PatientRecordsScreenState();
+  ConsumerState<PatientRecordsScreen> createState() =>
+      _PatientRecordsScreenState();
 }
 
-class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> with SingleTickerProviderStateMixin {
+class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -48,10 +50,7 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildPrescriptionsTab(),
-                _buildMedicalHistoryTab(),
-              ],
+              children: [_buildPrescriptionsTab(), _buildMedicalHistoryTab()],
             ),
           ),
         ],
@@ -67,7 +66,12 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
       error: (e, st) => Center(child: Text('Error: $e')),
       data: (prescriptions) {
         if (prescriptions.isEmpty) {
-          return const Center(child: Text('No prescriptions found.', style: TextStyle(color: ChiromoColors.textSecondary)));
+          return const Center(
+            child: Text(
+              'No prescriptions found.',
+              style: TextStyle(color: ChiromoColors.textSecondary),
+            ),
+          );
         }
         return ListView.builder(
           itemCount: prescriptions.length,
@@ -75,10 +79,15 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
             final prescription = prescriptions[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16),
-                title: Text(prescription.medicationName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  prescription.medicationName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -88,15 +97,24 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
                     Text('Duration: ${prescription.durationDays} days'),
                     if (prescription.instructions != null) ...[
                       const SizedBox(height: 4),
-                      Text('Notes: ${prescription.instructions}', style: const TextStyle(fontStyle: FontStyle.italic)),
-                    ]
+                      Text(
+                        'Notes: ${prescription.instructions}',
+                        style: const TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ],
                   ],
                 ),
                 trailing: Chip(
-                  label: Text(prescription.isDispensed ? 'Dispensed' : 'Pending'),
-                  backgroundColor: prescription.isDispensed ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                  label: Text(
+                    prescription.isDispensed ? 'Dispensed' : 'Pending',
+                  ),
+                  backgroundColor: prescription.isDispensed
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.orange.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
-                    color: prescription.isDispensed ? Colors.green : Colors.orange,
+                    color: prescription.isDispensed
+                        ? Colors.green
+                        : Colors.orange,
                     fontSize: 12,
                   ),
                 ),
@@ -116,7 +134,12 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
       error: (e, st) => Center(child: Text('Error: $e')),
       data: (records) {
         if (records.isEmpty) {
-          return const Center(child: Text('No medical history found.', style: TextStyle(color: ChiromoColors.textSecondary)));
+          return const Center(
+            child: Text(
+              'No medical history found.',
+              style: TextStyle(color: ChiromoColors.textSecondary),
+            ),
+          );
         }
         return ListView.builder(
           itemCount: records.length,
@@ -124,7 +147,9 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
             final record = records[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -135,18 +160,35 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
                       children: [
                         Text(
                           DateFormat('MMM dd, yyyy').format(record.createdAt),
-                          style: const TextStyle(fontWeight: FontWeight.w600, color: ChiromoColors.primary),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: ChiromoColors.primary,
+                          ),
                         ),
                       ],
                     ),
                     const Divider(),
                     if (record.chiefComplaint != null) ...[
-                      const Text('Complaint', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: ChiromoColors.textSecondary)),
+                      const Text(
+                        'Complaint',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: ChiromoColors.textSecondary,
+                        ),
+                      ),
                       Text(record.chiefComplaint!),
                       const SizedBox(height: 8),
                     ],
                     if (record.clinicalNotes != null) ...[
-                      const Text('Clinical Notes', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: ChiromoColors.textSecondary)),
+                      const Text(
+                        'Clinical Notes',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: ChiromoColors.textSecondary,
+                        ),
+                      ),
                       Text(record.clinicalNotes!),
                       const SizedBox(height: 8),
                     ],
@@ -154,10 +196,14 @@ class _PatientRecordsScreenState extends ConsumerState<PatientRecordsScreen> wit
                       spacing: 16,
                       runSpacing: 8,
                       children: [
-                        if (record.bloodPressure != null) _buildVitalsBadge('BP', record.bloodPressure!),
-                        if (record.heartRate != null) _buildVitalsBadge('HR', '${record.heartRate} bpm'),
-                        if (record.temperature != null) _buildVitalsBadge('Temp', '${record.temperature}°C'),
-                        if (record.weight != null) _buildVitalsBadge('Weight', '${record.weight} kg'),
+                        if (record.bloodPressure != null)
+                          _buildVitalsBadge('BP', record.bloodPressure!),
+                        if (record.heartRate != null)
+                          _buildVitalsBadge('HR', '${record.heartRate} bpm'),
+                        if (record.temperature != null)
+                          _buildVitalsBadge('Temp', '${record.temperature}°C'),
+                        if (record.weight != null)
+                          _buildVitalsBadge('Weight', '${record.weight} kg'),
                       ],
                     ),
                   ],

@@ -8,6 +8,19 @@ import '../models/user_model.dart';
 /// Thrown by [AuthRepositoryImpl] for operations the Business Central API
 /// doesn't (yet) support, so the existing AsyncError-driven UI can surface a
 /// clean, user-facing message instead of a stack trace.
+/// An auth operation that failed with a message worth showing the user —
+/// usually the API's own wording, extracted from the error envelope.
+///
+/// [toString] returns the bare message so screens that interpolate the error
+/// into a banner or snackbar don't leak a "Exception: " prefix.
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class AuthFeatureUnavailableException implements Exception {
   final String message;
   AuthFeatureUnavailableException(this.message);
@@ -49,7 +62,9 @@ class AuthRepositoryImpl implements AuthRepository {
         res.data['user'] as Map<String, dynamic>,
       ).toEntity();
     } on DioException catch (e) {
-      throw Exception(_messageFrom(e, 'Unable to sign in. Please try again.'));
+      throw AuthException(
+        _messageFrom(e, 'Unable to sign in. Please try again.'),
+      );
     }
   }
 
@@ -77,7 +92,7 @@ class AuthRepositoryImpl implements AuthRepository {
         },
       );
     } on DioException catch (e) {
-      throw Exception(
+      throw AuthException(
         _messageFrom(e, 'Unable to create your account. Please try again.'),
       );
     }
@@ -116,7 +131,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _dio.post('/api/v1/auth/forgot-password', data: {'email': email});
     } on DioException catch (e) {
-      throw Exception(
+      throw AuthException(
         _messageFrom(e, 'Unable to send the reset code. Please try again.'),
       );
     }
@@ -139,7 +154,7 @@ class AuthRepositoryImpl implements AuthRepository {
         },
       );
     } on DioException catch (e) {
-      throw Exception(
+      throw AuthException(
         _messageFrom(
           e,
           'Unable to reset your password. Please check the code and try again.',
@@ -149,25 +164,118 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> updatePassword(String newPassword) async {
-    throw AuthFeatureUnavailableException(
-      'Changing your password from within the app isn\'t available yet — use "Forgot password" instead.',
-    );
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.post(
+        '/api/v1/auth/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+          'confirmPassword': newPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw AuthException(
+        _messageFrom(e, 'Unable to change your password. Please try again.'),
+      );
+    }
+  }
+
+  @override
+  Future<void> sendVerificationOtp(String email) async {
+    try {
+      await _dio.post(
+        '/api/v1/auth/send-verification-otp',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw AuthException(
+        _messageFrom(
+          e,
+          'Unable to send the verification code. Please try again.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> verifyEmail({
+    required String email,
+    required String otpCode,
+  }) async {
+    try {
+      await _dio.post(
+        '/api/v1/auth/verify-email',
+        data: {'email': email, 'otpCode': otpCode},
+      );
+    } on DioException catch (e) {
+      throw AuthException(
+        _messageFrom(
+          e,
+          'Unable to verify your email. Please check the code and try again.',
+        ),
+      );
+    }
   }
 
   @override
   Future<UserEntity> updateProfile({
     String? firstName,
+    String? middleName,
     String? lastName,
     String? phone,
+    String? gender,
+    String? idNumber,
     String? avatarUrl,
     DateTime? dateOfBirth,
     String? bio,
   }) async {
-    throw AuthFeatureUnavailableException(
-      'Profile editing is not available yet with the new authentication system.',
-    );
+    // Only send what the caller actually supplied — the API treats an absent
+    // key as "leave unchanged" and an empty string as "clear this field".
+    final payload = <String, dynamic>{
+      'firstName': ?firstName,
+      'middleName': ?middleName,
+      'lastName': ?lastName,
+      'phoneNumber': ?phone,
+      'gender': ?gender,
+      'idNumber': ?idNumber,
+      'avatarUrl': ?avatarUrl,
+      'bio': ?bio,
+      if (dateOfBirth != null) 'dateOfBirth': _formatDate(dateOfBirth),
+    };
+
+    try {
+      final res = await _dio.patch('/api/v1/auth/me', data: payload);
+      final data = res.data['success']['data'] as Map<String, dynamic>;
+      return UserModel.fromJson(data).toEntity();
+    } on DioException catch (e) {
+      throw AuthException(
+        _messageFrom(e, 'Unable to update your profile. Please try again.'),
+      );
+    }
   }
+
+  @override
+  Future<void> deactivateAccount() async {
+    try {
+      await _dio.delete('/api/v1/auth/me');
+    } on DioException catch (e) {
+      throw AuthException(
+        _messageFrom(e, 'Unable to deactivate your account. Please try again.'),
+      );
+    }
+    // The account can no longer sign in, so the stored token is dead weight.
+    await TokenService.deleteToken();
+  }
+
+  /// Business Central parses dates as YYYY-MM-DD.
+  static String _formatDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 
   @override
   Future<void> signOut() async {
@@ -192,5 +300,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Stream<UserEntity?> get authStateChanges => Stream.fromFuture(getCurrentUser());
+  Stream<UserEntity?> get authStateChanges =>
+      Stream.fromFuture(getCurrentUser());
 }

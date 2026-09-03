@@ -26,7 +26,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _tryBiometrics() async {
-    final success = await ref.read(securityNotifierProvider.notifier).authenticateWithBiometrics();
+    final success = await ref
+        .read(securityNotifierProvider.notifier)
+        .authenticateWithBiometrics();
     if (success && mounted) {
       if (context.canPop()) {
         context.pop();
@@ -44,7 +46,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   void _verifyPin(String pin) async {
-    final success = await ref.read(securityNotifierProvider.notifier).verifyPin(pin);
+    final success = await ref
+        .read(securityNotifierProvider.notifier)
+        .verifyPin(pin);
     if (success && mounted) {
       if (context.canPop()) {
         context.pop();
@@ -74,9 +78,13 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         fontWeight: FontWeight.w600,
       ),
       decoration: BoxDecoration(
-        color: _isError ? ChiromoColors.error.withValues(alpha: 0.1) : ChiromoColors.primary.withValues(alpha: 0.1),
+        color: _isError
+            ? ChiromoColors.error.withValues(alpha: 0.1)
+            : ChiromoColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _isError ? ChiromoColors.error : Colors.transparent),
+        border: Border.all(
+          color: _isError ? ChiromoColors.error : Colors.transparent,
+        ),
       ),
     );
 
@@ -89,27 +97,24 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.lock,
-                size: 80,
-                color: ChiromoColors.primary,
-              ),
+              const Icon(Icons.lock, size: 80, color: ChiromoColors.primary),
               const SizedBox(height: 24),
               const Text(
                 'Enter PIN',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                _isError ? 'Incorrect PIN, please try again.' : 'App is locked for your security.',
+                _isError
+                    ? 'Incorrect PIN, please try again.'
+                    : 'App is locked for your security.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: _isError ? ChiromoColors.error : ChiromoColors.textSecondary,
+                  color: _isError
+                      ? ChiromoColors.error
+                      : ChiromoColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 48),
@@ -123,7 +128,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   defaultPinTheme: defaultPinTheme,
                   focusedPinTheme: defaultPinTheme.copyWith(
                     decoration: defaultPinTheme.decoration!.copyWith(
-                      border: Border.all(color: _isError ? ChiromoColors.error : ChiromoColors.primary),
+                      border: Border.all(
+                        color: _isError
+                            ? ChiromoColors.error
+                            : ChiromoColors.primary,
+                      ),
                     ),
                   ),
                   onCompleted: _verifyPin,
@@ -136,7 +145,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               if (isBiometricEnabled)
                 IconButton(
                   iconSize: 64,
-                  icon: const Icon(Icons.fingerprint, size: 48, color: ChiromoColors.primary),
+                  icon: const Icon(
+                    Icons.fingerprint,
+                    size: 48,
+                    color: ChiromoColors.primary,
+                  ),
                   onPressed: _tryBiometrics,
                 ),
             ],

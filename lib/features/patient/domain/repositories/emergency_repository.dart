@@ -6,7 +6,11 @@ abstract class EmergencyRepository {
   Future<SafetyPlanEntity> upsertSafetyPlan(SafetyPlanEntity plan);
 
   Future<List<EmergencyContactEntity>> getEmergencyContacts(String patientId);
-  Future<EmergencyContactEntity> createEmergencyContact(EmergencyContactEntity contact);
-  Future<EmergencyContactEntity> updateEmergencyContact(EmergencyContactEntity contact);
+  Future<EmergencyContactEntity> createEmergencyContact(
+    EmergencyContactEntity contact,
+  );
+  Future<EmergencyContactEntity> updateEmergencyContact(
+    EmergencyContactEntity contact,
+  );
   Future<void> deleteEmergencyContact(String id);
 }

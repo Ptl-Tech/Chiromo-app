@@ -26,13 +26,21 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
   }
 
   @override
-  Future<EmergencyContactEntity> createEmergencyContact(EmergencyContactEntity contact) {
-    return _remoteDataSource.createEmergencyContact(EmergencyContactModel.fromEntity(contact));
+  Future<EmergencyContactEntity> createEmergencyContact(
+    EmergencyContactEntity contact,
+  ) {
+    return _remoteDataSource.createEmergencyContact(
+      EmergencyContactModel.fromEntity(contact),
+    );
   }
 
   @override
-  Future<EmergencyContactEntity> updateEmergencyContact(EmergencyContactEntity contact) {
-    return _remoteDataSource.updateEmergencyContact(EmergencyContactModel.fromEntity(contact));
+  Future<EmergencyContactEntity> updateEmergencyContact(
+    EmergencyContactEntity contact,
+  ) {
+    return _remoteDataSource.updateEmergencyContact(
+      EmergencyContactModel.fromEntity(contact),
+    );
   }
 
   @override

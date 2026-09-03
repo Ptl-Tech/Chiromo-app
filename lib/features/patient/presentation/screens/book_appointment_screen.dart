@@ -31,9 +31,9 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
   void _nextStep() {
     if (_currentStep == 0 && _selectedBranch == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a branch.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a branch.')));
       return;
     }
     if (_currentStep == 1 && _selectedType == null) {
@@ -120,29 +120,34 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         steps: [
           Step(
             title: const Text('Select Branch'),
-            content: ref.watch(branchesProvider).when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, st) => Text('Error loading branches: $err'),
-              data: (branches) {
-                if (branches.isEmpty) {
-                  return const Text('No branches available.');
-                }
-                return Column(
-                  children: branches.map((branch) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildChoiceTile(
-                        title: branch.name,
-                        subtitle: 'Book an appointment at our ${branch.name} clinic',
-                        icon: Icons.business_outlined,
-                        isSelected: _selectedBranch?.id == branch.id,
-                        onTap: () => setState(() => _selectedBranch = branch),
-                      ),
+            content: ref
+                .watch(branchesProvider)
+                .when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, st) => Text('Error loading branches: $err'),
+                  data: (branches) {
+                    if (branches.isEmpty) {
+                      return const Text('No branches available.');
+                    }
+                    return Column(
+                      children: branches.map((branch) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildChoiceTile(
+                            title: branch.name,
+                            subtitle:
+                                'Book an appointment at our ${branch.name} clinic',
+                            icon: Icons.business_outlined,
+                            isSelected: _selectedBranch?.id == branch.id,
+                            onTap: () =>
+                                setState(() => _selectedBranch = branch),
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
-                );
-              },
-            ),
+                  },
+                ),
             isActive: _currentStep >= 0,
             state: _currentStep > 0 ? StepState.complete : StepState.indexed,
           ),
@@ -224,7 +229,9 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 CalendarDatePicker(
-                  initialDate: _selectedDate ?? DateTime.now().add(const Duration(days: 1)),
+                  initialDate:
+                      _selectedDate ??
+                      DateTime.now().add(const Duration(days: 1)),
                   firstDate: DateTime.now(),
                   lastDate: DateTime.now().add(const Duration(days: 60)),
                   onDateChanged: (date) {
@@ -236,56 +243,99 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                 ),
                 if (_selectedDate != null && _selectedDoctor != null) ...[
                   const SizedBox(height: 16),
-                  const Text('Select Time Slot', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 12),
-                  ref.watch(doctorAppointmentsForDateProvider((_selectedDoctor!.id, _selectedDate!))).when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => Text('Error loading slots: $err'),
-                    data: (existingAppts) {
-                      final bookedTimes = existingAppts
-                          .where((a) => a.status != AppConstants.statusCancelled && a.status != AppConstants.statusRejected)
-                          .map((a) => TimeOfDay(hour: a.scheduledAt.toLocal().hour, minute: a.scheduledAt.toLocal().minute))
-                          .toSet();
-
-                      // Generate slots 9 AM to 4 PM
-                      final slots = List.generate(8, (i) => TimeOfDay(hour: 9 + i, minute: 0));
-
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: slots.map((slot) {
-                          final isBooked = bookedTimes.contains(slot);
-                          final isSelected = _selectedTime == slot;
-                          return InkWell(
-                            onTap: isBooked ? null : () => setState(() => _selectedTime = slot),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? ChiromoColors.primary
-                                    : (isBooked ? ChiromoColors.surfaceVariant.withValues(alpha: 0.5) : Colors.transparent),
-                                border: Border.all(
-                                  color: isSelected ? ChiromoColors.primary : (isBooked ? ChiromoColors.border.withValues(alpha: 0.5) : ChiromoColors.border),
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                slot.format(context),
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isBooked ? ChiromoColors.textTertiary : ChiromoColors.textPrimary),
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                  decoration: isBooked ? TextDecoration.lineThrough : null,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
+                  const Text(
+                    'Select Time Slot',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
+                  const SizedBox(height: 12),
+                  ref
+                      .watch(
+                        doctorAppointmentsForDateProvider((
+                          _selectedDoctor!.id,
+                          _selectedDate!,
+                        )),
+                      )
+                      .when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, st) => Text('Error loading slots: $err'),
+                        data: (existingAppts) {
+                          final bookedTimes = existingAppts
+                              .where(
+                                (a) =>
+                                    a.status != AppConstants.statusCancelled &&
+                                    a.status != AppConstants.statusRejected,
+                              )
+                              .map(
+                                (a) => TimeOfDay(
+                                  hour: a.scheduledAt.toLocal().hour,
+                                  minute: a.scheduledAt.toLocal().minute,
+                                ),
+                              )
+                              .toSet();
+
+                          // Generate slots 9 AM to 4 PM
+                          final slots = List.generate(
+                            8,
+                            (i) => TimeOfDay(hour: 9 + i, minute: 0),
+                          );
+
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: slots.map((slot) {
+                              final isBooked = bookedTimes.contains(slot);
+                              final isSelected = _selectedTime == slot;
+                              return InkWell(
+                                onTap: isBooked
+                                    ? null
+                                    : () =>
+                                          setState(() => _selectedTime = slot),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? ChiromoColors.primary
+                                        : (isBooked
+                                              ? ChiromoColors.surfaceVariant
+                                                    .withValues(alpha: 0.5)
+                                              : Colors.transparent),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? ChiromoColors.primary
+                                          : (isBooked
+                                                ? ChiromoColors.border
+                                                      .withValues(alpha: 0.5)
+                                                : ChiromoColors.border),
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    slot.format(context),
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : (isBooked
+                                                ? ChiromoColors.textTertiary
+                                                : ChiromoColors.textPrimary),
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                      decoration: isBooked
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
                 ],
               ],
             ),
@@ -308,16 +358,19 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   const Divider(),
-                  _buildSummaryRow('Branch', _selectedBranch?.name ?? 'Not selected'),
+                  _buildSummaryRow(
+                    'Branch',
+                    _selectedBranch?.name ?? 'Not selected',
+                  ),
                   _buildSummaryRow(
                     'Type',
                     _selectedType == 'video'
                         ? 'Video Call'
                         : _selectedType == 'voice'
-                            ? 'Voice Call'
-                            : _selectedType == 'chat'
-                                ? 'Chat'
-                                : 'In-Person',
+                        ? 'Voice Call'
+                        : _selectedType == 'chat'
+                        ? 'Chat'
+                        : 'In-Person',
                   ),
                   _buildSummaryRow(
                     'Doctor',
@@ -350,7 +403,8 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   Future<void> _submitBooking() async {
-    if (_selectedBranch == null || _selectedType == null ||
+    if (_selectedBranch == null ||
+        _selectedType == null ||
         _selectedDoctor == null ||
         _selectedDate == null ||
         _selectedTime == null) {
@@ -365,9 +419,9 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
     try {
       final repo = ref.read(appointmentRepositoryProvider);
-      
+
       final numSessions = _isRecurring ? 4 : 1;
-      
+
       for (int i = 0; i < numSessions; i++) {
         final date = _selectedDate!.add(Duration(days: i * 7));
         final model = AppointmentModel(
@@ -399,7 +453,13 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isRecurring ? 'All 4 recurring appointments booked successfully!' : 'Appointment booked successfully!')),
+          SnackBar(
+            content: Text(
+              _isRecurring
+                  ? 'All 4 recurring appointments booked successfully!'
+                  : 'Appointment booked successfully!',
+            ),
+          ),
         );
         Navigator.of(context).pop();
       }

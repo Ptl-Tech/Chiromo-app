@@ -13,7 +13,20 @@ class AppConstants {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pY2d4dmNrd2RwdGloemJ6bXNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5MjU2NTMsImV4cCI6MjA5OTUwMTY1M30.3la1fvzN75MSBvNMPdpVuBev3jho1j_cFUFq48xoEJ4';
 
   // ── Custom API ─────────────────────────────────────────────────
-  static const String apiBaseUrl = 'http://10.180.172.33:9093';
+  /// Base URL of the Go gateway (hospital-app-api).
+  ///
+  /// Override per run rather than editing this file — a hardcoded LAN IP goes
+  /// stale the moment DHCP hands out a new one:
+  ///
+  ///   flutter run --dart-define=API_BASE_URL=http://192.168.100.73:9093
+  ///
+  /// The default suits desktop and web builds, and Android emulators once
+  /// `adb reverse tcp:9093 tcp:9093` is set up. A physical device needs the
+  /// dev machine's LAN address passed in explicitly.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:9093',
+  );
 
   // ── Branches ──────────────────────────────────────────────────
   static const List<String> branches = [

@@ -1,9 +1,12 @@
 /// The type of CBT exercise.
+///
+/// Daily check-ins used to live here as a fourth type. They are now a feature
+/// in their own right, backed by Business Central rather than Supabase — see
+/// `data/models/checkin_model.dart` and the `/checkins` endpoints.
 enum CbtExerciseType {
   thoughtRecord,
   behavioralActivation,
-  exposureLadder,
-  dailyCheckin;
+  exposureLadder;
 
   String get value {
     switch (this) {
@@ -13,8 +16,6 @@ enum CbtExerciseType {
         return 'behavioral_activation';
       case CbtExerciseType.exposureLadder:
         return 'exposure_ladder';
-      case CbtExerciseType.dailyCheckin:
-        return 'daily_checkin';
     }
   }
 
@@ -26,8 +27,6 @@ enum CbtExerciseType {
         return 'Behavioral Activation';
       case CbtExerciseType.exposureLadder:
         return 'Exposure Ladder';
-      case CbtExerciseType.dailyCheckin:
-        return 'Daily Check-in';
     }
   }
 
@@ -39,10 +38,8 @@ enum CbtExerciseType {
         return CbtExerciseType.behavioralActivation;
       case 'exposure_ladder':
         return CbtExerciseType.exposureLadder;
-      case 'daily_checkin':
-        return CbtExerciseType.dailyCheckin;
       default:
-        return CbtExerciseType.dailyCheckin;
+        return CbtExerciseType.thoughtRecord;
     }
   }
 }
@@ -81,11 +78,6 @@ class CbtExerciseEntity {
   int? get reliefPercent => data['relief_percent'] as int?;
   int? get anxietyBefore => data['anxiety_before'] as int?;
   int? get anxietyAfter => data['anxiety_after'] as int?;
-
-  // ── Daily Check-in helpers ──
-  int? get mood => data['mood'] as int?;
-  int? get anxiety => data['anxiety'] as int?;
-  double? get sleepHours => (data['sleep_hours'] as num?)?.toDouble();
 
   // ── Behavioral Activation helpers ──
   String? get activity => data['activity'] as String?;

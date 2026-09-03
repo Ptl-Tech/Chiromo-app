@@ -11,7 +11,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 /// Business Central resets passwords via an emailed OTP code rather than a
@@ -78,7 +79,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _error = null;
     });
     try {
-      await ref.read(authNotifierProvider.notifier).confirmPasswordReset(
+      await ref
+          .read(authNotifierProvider.notifier)
+          .confirmPasswordReset(
             email: _emailCtrl.text.trim(),
             otpCode: otp,
             newPassword: password,
@@ -120,20 +123,27 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 24),
         Text(
           'Forgot your password?',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           'Enter your email address and we will send you a code to reset your password.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: Text(_error!, style: const TextStyle(color: ChiromoColors.error)),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: ChiromoColors.error),
+            ),
           ),
         ChiromoTextField(
           controller: _emailCtrl,
@@ -156,24 +166,35 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.mark_email_read_outlined, size: 64, color: ChiromoColors.primary),
+        const Icon(
+          Icons.mark_email_read_outlined,
+          size: 64,
+          color: ChiromoColors.primary,
+        ),
         const SizedBox(height: 24),
         Text(
           'Check your email',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           'Enter the code we sent to ${_emailCtrl.text} along with your new password.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: Text(_error!, style: const TextStyle(color: ChiromoColors.error)),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: ChiromoColors.error),
+            ),
           ),
         ChiromoTextField(
           controller: _otpCtrl,
@@ -190,7 +211,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           prefixIcon: Icons.lock_outline,
           obscureText: _obscure,
           suffixIcon: IconButton(
-            icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+            icon: Icon(
+              _obscure
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+            ),
             onPressed: () => setState(() => _obscure = !_obscure),
           ),
         ),
@@ -213,9 +238,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: _isLoading
               ? null
               : () => setState(() {
-                    _step = _ForgotPasswordStep.request;
-                    _error = null;
-                  }),
+                  _step = _ForgotPasswordStep.request;
+                  _error = null;
+                }),
           child: const Text('Use a different email'),
         ),
       ],
@@ -226,17 +251,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.check_circle_outline, size: 64, color: ChiromoColors.success),
+        const Icon(
+          Icons.check_circle_outline,
+          size: 64,
+          color: ChiromoColors.success,
+        ),
         const SizedBox(height: 24),
         Text(
           'Password reset',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           'Your password has been reset successfully. Sign in with your new password.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: ChiromoColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),

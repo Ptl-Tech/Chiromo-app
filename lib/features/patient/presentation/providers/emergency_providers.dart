@@ -23,7 +23,9 @@ final safetyPlanProvider = FutureProvider<SafetyPlanEntity?>((ref) async {
 });
 
 /// Fetches the Emergency Contacts for the currently logged-in patient.
-final emergencyContactsProvider = FutureProvider<List<EmergencyContactEntity>>((ref) async {
+final emergencyContactsProvider = FutureProvider<List<EmergencyContactEntity>>((
+  ref,
+) async {
   final user = ref.watch(authNotifierProvider).valueOrNull;
   if (user == null) return [];
 

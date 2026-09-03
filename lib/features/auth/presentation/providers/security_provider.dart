@@ -46,7 +46,7 @@ class SecurityNotifier extends StateNotifier<AsyncValue<SecurityState>> {
   static const _biometricKey = 'use_biometrics';
 
   SecurityNotifier(this._storage, this._auth)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     _init();
   }
 
@@ -54,17 +54,20 @@ class SecurityNotifier extends StateNotifier<AsyncValue<SecurityState>> {
     try {
       final pin = await _storage.read(key: _pinKey);
       final biometricEnabled = await _storage.read(key: _biometricKey);
-      
-      final isAvailable = await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
+
+      final isAvailable =
+          await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
 
       final isSetup = pin != null && pin.isNotEmpty;
 
-      state = AsyncValue.data(SecurityState(
-        isAppLocked: isSetup, // Start locked if setup
-        isSecuritySetup: isSetup,
-        isBiometricEnabled: biometricEnabled == 'true',
-        isBiometricAvailable: isAvailable,
-      ));
+      state = AsyncValue.data(
+        SecurityState(
+          isAppLocked: isSetup, // Start locked if setup
+          isSecuritySetup: isSetup,
+          isBiometricEnabled: biometricEnabled == 'true',
+          isBiometricAvailable: isAvailable,
+        ),
+      );
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -73,12 +76,14 @@ class SecurityNotifier extends StateNotifier<AsyncValue<SecurityState>> {
   Future<void> setupSecurity(String pin, bool useBiometrics) async {
     await _storage.write(key: _pinKey, value: pin);
     await _storage.write(key: _biometricKey, value: useBiometrics.toString());
-    
-    state = state.whenData((s) => s.copyWith(
-      isSecuritySetup: true,
-      isBiometricEnabled: useBiometrics,
-      isAppLocked: false, // Unlocked after setup
-    ));
+
+    state = state.whenData(
+      (s) => s.copyWith(
+        isSecuritySetup: true,
+        isBiometricEnabled: useBiometrics,
+        isAppLocked: false, // Unlocked after setup
+      ),
+    );
   }
 
   Future<bool> verifyPin(String enteredPin) async {
@@ -123,17 +128,19 @@ class SecurityNotifier extends StateNotifier<AsyncValue<SecurityState>> {
   Future<void> clearSecurity() async {
     await _storage.delete(key: _pinKey);
     await _storage.delete(key: _biometricKey);
-    state = state.whenData((s) => s.copyWith(
-      isSecuritySetup: false,
-      isBiometricEnabled: false,
-      isAppLocked: false,
-    ));
+    state = state.whenData(
+      (s) => s.copyWith(
+        isSecuritySetup: false,
+        isBiometricEnabled: false,
+        isAppLocked: false,
+      ),
+    );
   }
 }
 
 final securityNotifierProvider =
     StateNotifierProvider<SecurityNotifier, AsyncValue<SecurityState>>((ref) {
-  final storage = ref.watch(secureStorageProvider);
-  final auth = ref.watch(localAuthProvider);
-  return SecurityNotifier(storage, auth);
-});
+      final storage = ref.watch(secureStorageProvider);
+      final auth = ref.watch(localAuthProvider);
+      return SecurityNotifier(storage, auth);
+    });

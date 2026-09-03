@@ -13,8 +13,9 @@ final cbtRepositoryProvider = Provider<CbtRepository>((ref) {
 });
 
 /// Fetches all CBT exercises for the currently logged-in patient.
-final cbtExercisesProvider =
-    FutureProvider<List<CbtExerciseEntity>>((ref) async {
+final cbtExercisesProvider = FutureProvider<List<CbtExerciseEntity>>((
+  ref,
+) async {
   final user = ref.watch(authNotifierProvider).valueOrNull;
   if (user == null) return [];
 
@@ -23,8 +24,9 @@ final cbtExercisesProvider =
 });
 
 /// Filtered view: recent progress entries (last 10, newest first).
-final cbtRecentProgressProvider =
-    FutureProvider<List<CbtExerciseEntity>>((ref) async {
+final cbtRecentProgressProvider = FutureProvider<List<CbtExerciseEntity>>((
+  ref,
+) async {
   final exercises = await ref.watch(cbtExercisesProvider.future);
   final sorted = List<CbtExerciseEntity>.from(exercises)
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));

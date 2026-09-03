@@ -60,15 +60,33 @@ Page<dynamic> _fadePage(Widget child) {
   );
 }
 
+/// Bridges Riverpod state changes into a [Listenable] that GoRouter can watch.
+///
+/// The router must NOT be rebuilt when auth state changes: `MaterialApp.router`
+/// treats a new GoRouter instance as a whole new configuration and restarts it
+/// at [GoRouter.initialLocation], throwing the user back to /welcome mid-flow.
+/// Refreshing a long-lived router re-runs `redirect` against the current state
+/// while leaving the navigation stack intact.
+class _RouterRefresh extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
-  final securityState = ref.watch(securityNotifierProvider).valueOrNull;
-  final user = authState.valueOrNull;
+  final refresh = _RouterRefresh();
+
+  // listen, not watch — watching would recreate the router (see _RouterRefresh).
+  ref.listen(authNotifierProvider, (_, _) => refresh.refresh());
+  ref.listen(securityNotifierProvider, (_, _) => refresh.refresh());
+  ref.onDispose(refresh.dispose);
 
   return GoRouter(
     initialLocation: '/welcome',
     debugLogDiagnostics: true,
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final user = ref.read(authNotifierProvider).valueOrNull;
+      final securityState = ref.read(securityNotifierProvider).valueOrNull;
+
       final isLoggedIn = user != null;
       final isAuthRoute =
           state.matchedLocation.startsWith('/login') ||

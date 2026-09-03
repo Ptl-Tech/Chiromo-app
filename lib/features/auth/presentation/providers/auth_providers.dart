@@ -120,6 +120,39 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     }
   }
 
+  /// Changes the signed-in user's password. Errors propagate so the calling
+  /// screen can show them inline without clobbering the global auth state.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) {
+    return _repo.updatePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+  }
+
+  /// Requests an email-verification OTP for [email].
+  Future<void> sendVerificationOtp(String email) =>
+      _repo.sendVerificationOtp(email);
+
+  /// Confirms an email address, then refreshes the cached profile so the
+  /// verified flag is reflected in the UI.
+  Future<void> verifyEmail({
+    required String email,
+    required String otpCode,
+  }) async {
+    await _repo.verifyEmail(email: email, otpCode: otpCode);
+    await refreshCurrentUser();
+  }
+
+  /// Deactivates the account and drops the session. The repository clears the
+  /// stored token, so this ends with the user signed out.
+  Future<void> deactivateAccount() async {
+    await _repo.deactivateAccount();
+    state = const AsyncValue.data(null);
+  }
+
   Future<void> signOut() async {
     await _repo.signOut();
     state = const AsyncValue.data(null);

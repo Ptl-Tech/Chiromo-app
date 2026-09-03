@@ -115,7 +115,9 @@ class _BrowseDoctorsScreenState extends ConsumerState<BrowseDoctorsScreen> {
     required VoidCallback onChat,
     required VoidCallback onBook,
   }) {
-    final displayName = name.toLowerCase().startsWith('dr') ? name : 'Dr. $name';
+    final displayName = name.toLowerCase().startsWith('dr')
+        ? name
+        : 'Dr. $name';
 
     return Container(
       decoration: BoxDecoration(
@@ -303,7 +305,10 @@ class _BrowseDoctorsScreenState extends ConsumerState<BrowseDoctorsScreen> {
                       const SizedBox(width: 8),
                       FilledButton.icon(
                         onPressed: onBook,
-                        icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                        icon: const Icon(
+                          Icons.calendar_month_outlined,
+                          size: 16,
+                        ),
                         label: const Text('Book'),
                         style: FilledButton.styleFrom(
                           backgroundColor: ChiromoColors.primary,

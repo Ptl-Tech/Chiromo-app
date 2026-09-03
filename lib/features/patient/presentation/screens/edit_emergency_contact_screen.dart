@@ -14,10 +14,12 @@ class EditEmergencyContactScreen extends ConsumerStatefulWidget {
   const EditEmergencyContactScreen({super.key, this.contact});
 
   @override
-  ConsumerState<EditEmergencyContactScreen> createState() => _EditEmergencyContactScreenState();
+  ConsumerState<EditEmergencyContactScreen> createState() =>
+      _EditEmergencyContactScreenState();
 }
 
-class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContactScreen> {
+class _EditEmergencyContactScreenState
+    extends ConsumerState<EditEmergencyContactScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -46,15 +48,15 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
 
   void _saveContact() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final user = ref.read(authNotifierProvider).valueOrNull;
     if (user == null) return;
 
     setState(() => _isSaving = true);
-    
+
     try {
       final repo = ref.read(emergencyRepositoryProvider);
-      
+
       final newContact = EmergencyContactEntity(
         id: widget.contact?.id ?? '',
         patientId: user.id,
@@ -70,21 +72,25 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
       } else {
         await repo.updateEmergencyContact(newContact);
       }
-      
+
       // Refresh provider
       ref.invalidate(emergencyContactsProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.contact == null ? 'Contact added' : 'Contact updated')),
+          SnackBar(
+            content: Text(
+              widget.contact == null ? 'Contact added' : 'Contact updated',
+            ),
+          ),
         );
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving contact: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving contact: $e')));
       }
     } finally {
       if (mounted) {
@@ -95,26 +101,26 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
 
   void _deleteContact() async {
     if (widget.contact == null) return;
-    
+
     setState(() => _isDeleting = true);
-    
+
     try {
       final repo = ref.read(emergencyRepositoryProvider);
       await repo.deleteEmergencyContact(widget.contact!.id);
-      
+
       ref.invalidate(emergencyContactsProvider);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Contact deleted')));
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting contact: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting contact: $e')));
         setState(() => _isDeleting = false);
       }
     }
@@ -136,7 +142,9 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
             children: [
               Text(
                 'Personal Emergency Contact',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -187,7 +195,7 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
                 onPressed: _isSaving ? null : _saveContact,
                 isLoading: _isSaving,
               ),
-              
+
               if (isEditing) ...[
                 const SizedBox(height: 16),
                 ChiromoButton(
@@ -241,7 +249,10 @@ class _EditEmergencyContactScreenState extends ConsumerState<EditEmergencyContac
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
             ),
           ),
         ),

@@ -47,6 +47,9 @@ class UserEntity {
   final String? bio;
   final UserRole role;
   final String? branchId;
+
+  /// Whether the user has confirmed their email address with an OTP.
+  final bool emailVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -62,6 +65,7 @@ class UserEntity {
     this.bio,
     required this.role,
     this.branchId,
+    this.emailVerified = false,
     required this.createdAt,
     required this.updatedAt,
   });

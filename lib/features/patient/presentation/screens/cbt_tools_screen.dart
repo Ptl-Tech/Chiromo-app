@@ -628,16 +628,6 @@ class _ProgressCard extends StatelessWidget {
 
   Widget _buildTypeContent() {
     switch (exercise.type) {
-      case CbtExerciseType.dailyCheckin:
-        return Row(
-          children: [
-            _MetricChip('Mood', '${exercise.mood ?? 0}/10'),
-            const SizedBox(width: 16),
-            _MetricChip('Anxiety', '${exercise.anxiety ?? 0}/10'),
-            const SizedBox(width: 16),
-            _MetricChip('Sleep', '${exercise.sleepHours ?? 0}h'),
-          ],
-        );
       case CbtExerciseType.thoughtRecord:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,8 +723,6 @@ class _ProgressCard extends StatelessWidget {
 
   String _imageForType(CbtExerciseType type) {
     switch (type) {
-      case CbtExerciseType.dailyCheckin:
-        return 'assets/images/quick_actions/cbt_tools.png';
       case CbtExerciseType.thoughtRecord:
         return 'assets/images/cbt_tools/thought_record.png';
       case CbtExerciseType.behavioralActivation:

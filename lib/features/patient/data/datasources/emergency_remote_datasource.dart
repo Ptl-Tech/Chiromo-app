@@ -22,11 +22,11 @@ class EmergencyRemoteDataSource {
 
   Future<SafetyPlanModel> upsertSafetyPlan(SafetyPlanModel model) async {
     final Map<String, dynamic> data = model.toJson();
-    // Remove id if we are creating a new one and it's empty, 
+    // Remove id if we are creating a new one and it's empty,
     // or let Supabase handle it if we are using an upsert that relies on patient_id constraint.
     // The migration has UNIQUE(patient_id) on safety_plans.
     // We can use upsert on patient_id constraint.
-    
+
     // We don't want to pass 'id' if it's empty to allow uuid_generate_v4()
     if (data['id'] == null || data['id'] == '') {
       data.remove('id');
@@ -43,7 +43,9 @@ class EmergencyRemoteDataSource {
 
   // --- Emergency Contacts ---
 
-  Future<List<EmergencyContactModel>> getEmergencyContacts(String patientId) async {
+  Future<List<EmergencyContactModel>> getEmergencyContacts(
+    String patientId,
+  ) async {
     final response = await _client
         .from('emergency_contacts')
         .select()
@@ -55,7 +57,9 @@ class EmergencyRemoteDataSource {
         .toList();
   }
 
-  Future<EmergencyContactModel> createEmergencyContact(EmergencyContactModel model) async {
+  Future<EmergencyContactModel> createEmergencyContact(
+    EmergencyContactModel model,
+  ) async {
     final data = model.toJson();
     if (data['id'] == null || data['id'] == '') {
       data.remove('id');
@@ -70,7 +74,9 @@ class EmergencyRemoteDataSource {
     return EmergencyContactModel.fromJson(response);
   }
 
-  Future<EmergencyContactModel> updateEmergencyContact(EmergencyContactModel model) async {
+  Future<EmergencyContactModel> updateEmergencyContact(
+    EmergencyContactModel model,
+  ) async {
     final response = await _client
         .from('emergency_contacts')
         .update(model.toJson())
