@@ -36,6 +36,14 @@ class WellbeingStats {
   final double? averageAnxiety;
   final double? averageSleepHours;
 
+  /// Whether [dayStreak] ran back as far as the fetched history goes, so the
+  /// real streak is at least that and possibly longer.
+  ///
+  /// Shown as "180+" rather than "180". Quietly printing the cap as though it
+  /// were exact would shorten someone's streak on the one screen that exists
+  /// to credit it.
+  final bool streakAtWindowEdge;
+
   /// Check-ins recorded in the window.
   final int checkinCount;
 
@@ -49,6 +57,7 @@ class WellbeingStats {
     this.moodTrendPercent,
     this.averageAnxiety,
     this.averageSleepHours,
+    this.streakAtWindowEdge = false,
     this.checkinCount = 0,
     this.weekActivity = const [0, 0, 0, 0, 0, 0, 0],
   });
@@ -96,8 +105,11 @@ final wellbeingStatsProvider = FutureProvider<WellbeingStats>((ref) async {
     trend = ((averageMood - previousMood) / previousMood) * 100;
   }
 
+  final streak = _streak(checkinDays, today);
+
   return WellbeingStats(
-    dayStreak: _streak(checkinDays, today),
+    dayStreak: streak.days,
+    streakAtWindowEdge: streak.atWindowEdge,
     averageMood: averageMood,
     moodTrendPercent: trend,
     averageAnxiety: _averageRating(recent, kAnxietyRatingCode),
@@ -144,21 +156,30 @@ double? _averageSleep(List<SleepLog> logs, DateTime from) {
 /// Yesterday counts as the anchor so a streak does not appear broken at
 /// breakfast simply because today's check-in has not happened yet — which
 /// would punish someone for the time of day they opened the app.
-int _streak(Set<DateTime> days, DateTime today) {
-  if (days.isEmpty) return 0;
+///
+/// [atWindowEdge] is set when the walk reached the oldest day we fetched. The
+/// run may well continue past it; we simply cannot see that far, and the caller
+/// says so rather than presenting the cap as the answer.
+({int days, bool atWindowEdge}) _streak(Set<DateTime> days, DateTime today) {
+  if (days.isEmpty) return (days: 0, atWindowEdge: false);
 
   var cursor = today;
   if (!days.contains(cursor)) {
     cursor = today.subtract(const Duration(days: 1));
-    if (!days.contains(cursor)) return 0;
+    if (!days.contains(cursor)) return (days: 0, atWindowEdge: false);
   }
+
+  final oldest = historyWindowStart();
 
   var streak = 0;
   while (days.contains(cursor)) {
     streak++;
+    if (!cursor.isAfter(oldest)) {
+      return (days: streak, atWindowEdge: true);
+    }
     cursor = cursor.subtract(const Duration(days: 1));
   }
-  return streak;
+  return (days: streak, atWindowEdge: false);
 }
 
 /// Check-ins per day for the current week, Monday first.

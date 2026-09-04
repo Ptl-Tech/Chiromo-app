@@ -2,21 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../theme/chiromo_colors.dart';
+import '../../../../widgets/entrance_animations.dart';
 import '../providers/wellbeing_stats_provider.dart';
 
 /// The summary tiles from the Expo prototype's Progress screen, rebuilt on the
 /// Business-Central-backed check-in data: a streak card and average mood side
 /// by side, then sleep, anxiety and check-in count in a row beneath.
 ///
-/// The staggered entrance is done with plain [TweenAnimationBuilder] rather
-/// than a package — Reanimated's `FadeInDown.delay(n)` is a fade plus a short
-/// upward slide, which Flutter does natively.
-///
 /// Every tile shows a dash rather than a zero when nothing was recorded. "You
 /// have not logged sleep this week" and "you slept zero hours" are different
 /// statements, and only the first one is true.
 class WellbeingStatCards extends ConsumerWidget {
-  const WellbeingStatCards({super.key});
+  /// Where these tiles sit in the host screen's entrance cascade. The three
+  /// rows continue from here rather than restarting at zero, so the screen
+  /// animates as one sequence instead of two overlapping ones.
+  final int baseIndex;
+
+  const WellbeingStatCards({super.key, this.baseIndex = 0});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,15 +30,18 @@ class WellbeingStatCards extends ConsumerWidget {
 
         return Column(
           children: [
-            _Stagger(
-              index: 0,
+            StaggerIn(
+              index: baseIndex,
               child: IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       flex: 2,
-                      child: _StreakCard(streak: data.dayStreak),
+                      child: _StreakCard(
+                        streak: data.dayStreak,
+                        atLeast: data.streakAtWindowEdge,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -51,8 +56,8 @@ class WellbeingStatCards extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _Stagger(
-              index: 1,
+            StaggerIn(
+              index: baseIndex + 1,
               child: Row(
                 children: [
                   Expanded(
@@ -88,7 +93,10 @@ class WellbeingStatCards extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _Stagger(index: 2, child: _WeekStrip(activity: data.weekActivity)),
+            StaggerIn(
+              index: baseIndex + 2,
+              child: _WeekStrip(activity: data.weekActivity),
+            ),
           ],
         );
       },
@@ -97,36 +105,14 @@ class WellbeingStatCards extends ConsumerWidget {
   }
 }
 
-/// Fade-and-rise, delayed by position. The Flutter equivalent of the
-/// prototype's `FadeInDown.duration(500).delay(index * 100)`.
-class _Stagger extends StatelessWidget {
-  final int index;
-  final Widget child;
-
-  const _Stagger({required this.index, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 400 + (index * 120)),
-      curve: Curves.easeOutCubic,
-      builder: (context, t, child) => Opacity(
-        opacity: t.clamp(0, 1),
-        child: Transform.translate(
-          offset: Offset(0, 16 * (1 - t)),
-          child: child,
-        ),
-      ),
-      child: child,
-    );
-  }
-}
-
 class _StreakCard extends StatelessWidget {
   final int streak;
 
-  const _StreakCard({required this.streak});
+  /// The streak runs back as far as we fetched, so it is a floor rather than
+  /// an exact count and reads as "180+".
+  final bool atLeast;
+
+  const _StreakCard({required this.streak, this.atLeast = false});
 
   @override
   Widget build(BuildContext context) {
@@ -139,14 +125,19 @@ class _StreakCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.local_fire_department,
-            color: ChiromoColors.warning,
-            size: 26,
+          // Lands after the card itself has settled, so the flame reads as
+          // the card's punchline rather than another thing moving at once.
+          const PopIn(
+            delay: Duration(milliseconds: 300),
+            child: Icon(
+              Icons.local_fire_department,
+              color: ChiromoColors.warning,
+              size: 26,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
-            '$streak',
+            atLeast ? '$streak+' : '$streak',
             style: const TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w800,
@@ -390,14 +381,19 @@ class _WeekStrip extends StatelessWidget {
               for (var i = 0; i < 7; i++)
                 Column(
                   children: [
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: activity[i] > 0
-                            ? ChiromoColors.primary
-                            : ChiromoColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(8),
+                    // Monday-first left-to-right cascade, matching the
+                    // prototype's `withDelay(index * 80, withSpring(...))`.
+                    PopIn(
+                      delay: Duration(milliseconds: 260 + (i * 80)),
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: activity[i] > 0
+                              ? ChiromoColors.primary
+                              : ChiromoColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6),

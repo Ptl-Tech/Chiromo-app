@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/chiromo_colors.dart';
+import '../../../../widgets/entrance_animations.dart';
 import '../../../../widgets/layouts/app_scaffold.dart';
 import '../../../appointments/data/models/app_appointment_model.dart';
 import '../../../appointments/presentation/providers/app_appointment_providers.dart';
+import '../providers/activity_providers.dart';
 import '../providers/checkin_providers.dart';
+import '../providers/insights_provider.dart';
+import '../providers/thought_providers.dart';
 import '../widgets/wellbeing_stat_cards.dart';
 
 /// The patient's health hub: how they have been doing, what they are taking,
@@ -28,22 +32,35 @@ class HealthScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(checkinHistoryProvider);
           ref.invalidate(sleepLogsProvider);
+          // The insights read these two as well, so a pull that left them
+          // stale would refresh the charts and not the conclusions drawn
+          // from them.
+          ref.invalidate(thoughtRecordsProvider);
+          ref.invalidate(activityPlansProvider);
         },
+        // One cascade down the whole screen. The stat cards contribute three
+        // steps of their own from index 1, so the blocks after them resume at
+        // 4 — the numbering is continuous even though it crosses a widget
+        // boundary, which is what keeps it reading as a single sequence.
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: const [
-            _Heading(
-              title: 'Your Progress',
-              subtitle: 'Visualising your mental health journey',
+            StaggerIn(
+              index: 0,
+              child: _Heading(
+                title: 'Your Progress',
+                subtitle: 'Visualising your mental health journey',
+              ),
             ),
             SizedBox(height: 16),
-            WellbeingStatCards(),
+            WellbeingStatCards(baseIndex: 1),
             SizedBox(height: 20),
-            _MoodTrendCard(),
+            StaggerIn(index: 4, child: _MoodTrendCard()),
             SizedBox(height: 20),
-            _RecordsRows(),
+            StaggerIn(index: 5, child: _InsightsCard()),
+            StaggerIn(index: 6, child: _RecordsRows()),
             SizedBox(height: 20),
-            _CareTeam(),
+            StaggerIn(index: 7, child: _CareTeam()),
           ],
         ),
       ),
@@ -185,6 +202,149 @@ class _MoodTrendCard extends ConsumerWidget {
       },
       orElse: () => const SizedBox.shrink(),
     );
+  }
+}
+
+/// Patterns computed from the patient's own entries.
+///
+/// The card is absent, rather than empty or apologetic, until something clears
+/// the thresholds in [insightsProvider]. A "no insights yet" panel would take
+/// up the same room while telling the patient they have not done enough.
+class _InsightsCard extends ConsumerWidget {
+  const _InsightsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(insightsProvider)
+        .maybeWhen(
+          data: (insights) {
+            if (insights.isEmpty) return const SizedBox.shrink();
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+                decoration: BoxDecoration(
+                  color: ChiromoColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: ChiromoColors.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'What we can see so far',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: ChiromoColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    for (var i = 0; i < insights.length; i++)
+                      _InsightRow(insight: insights[i], index: i),
+                    const SizedBox(height: 4),
+                    // Said plainly, because everything above is a pattern in
+                    // the patient's own entries and none of it is a cause.
+                    const Text(
+                      'Patterns in your own entries, not conclusions. Your '
+                      'clinician is the one to read them with.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.4,
+                        color: ChiromoColors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            );
+          },
+          orElse: () => const SizedBox.shrink(),
+        );
+  }
+}
+
+class _InsightRow extends StatelessWidget {
+  final Insight insight;
+  final int index;
+
+  const _InsightRow({required this.insight, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = insight.favourable
+        ? ChiromoColors.statusCompleted
+        : ChiromoColors.warning;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PopIn(
+            delay: Duration(milliseconds: 520 + (index * 90)),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: tint.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_icon(), size: 15, color: tint),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  insight.text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: ChiromoColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                // The sample size sits with the claim rather than in a
+                // footnote. A pattern over six days and one over sixty read
+                // the same otherwise, and they are not the same.
+                Text(
+                  'Based on ${insight.basis}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: ChiromoColors.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _icon() {
+    switch (insight.kind) {
+      case InsightKind.activitySurprise:
+        return Icons.emoji_objects_outlined;
+      case InsightKind.thoughtRecordDistress:
+        return Icons.psychology_outlined;
+      // The only one whose arrow has to follow the finding. A rising arrow
+      // over "your mood is 9% lower" is the card contradicting itself.
+      case InsightKind.moodTrend:
+        return insight.favourable ? Icons.trending_up : Icons.trending_down;
+      case InsightKind.thoughtRecordDays:
+        return Icons.event_note_outlined;
+      case InsightKind.sleepAndMood:
+        return Icons.bedtime_outlined;
+    }
   }
 }
 

@@ -16,14 +16,92 @@ final ratingTypesProvider = FutureProvider<List<RatingType>>((ref) {
   return ref.watch(checkinDataSourceProvider).getRatingTypes();
 });
 
+/// How far back the app pulls check-ins and sleep logs.
+///
+/// Everything downstream reads a tail of this: the stat tiles compare a 7-day
+/// window against the 7 before it, the mood chart draws the last 14 entries,
+/// the chat sparkline the last 7. Six months leaves all of that room to spare
+/// while keeping a patient who has been with the clinic for years from
+/// re-downloading their whole history on every app open.
+///
+/// The one figure that could otherwise run past this is the day streak, which
+/// is capped at the window and labelled as a floor rather than silently
+/// rounded down — see [WellbeingStats.streakAtWindowEdge].
+const int kHistoryWindowDays = 180;
+
+/// The first day still fetched. Time is stripped so the boundary lands on a
+/// date, matching how BC filters.
+DateTime historyWindowStart() {
+  final now = DateTime.now();
+  return DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).subtract(const Duration(days: kHistoryWindowDays - 1));
+}
+
 /// The signed-in patient's check-in history, newest first.
+///
+/// No upper bound is sent. A device clock running ahead can date an entry
+/// tomorrow, and a `to` of today would hide the check-in the patient just
+/// saved — an entry vanishing on save reads as data loss.
 final checkinHistoryProvider = FutureProvider<List<Checkin>>((ref) {
-  return ref.watch(checkinDataSourceProvider).getCheckins();
+  return ref
+      .watch(checkinDataSourceProvider)
+      .getCheckins(from: historyWindowStart());
 });
 
 /// The signed-in patient's nightly sleep durations, newest first.
 final sleepLogsProvider = FutureProvider<List<SleepLog>>((ref) {
-  return ref.watch(checkinDataSourceProvider).getSleepLogs();
+  return ref
+      .watch(checkinDataSourceProvider)
+      .getSleepLogs(from: historyWindowStart());
+});
+
+/// Last night's sleep as already recorded, or null when nothing is logged for
+/// today yet.
+///
+/// The check-in form needs this before it can show a sleep slider. BC keys
+/// sleep on the date and a save replaces the row, so a form that opened on a
+/// hardcoded default would overwrite a real figure with a guess the moment a
+/// patient checked in a second time.
+final todaySleepProvider = FutureProvider<SleepLog?>((ref) async {
+  final logs = await ref.watch(sleepLogsProvider.future);
+  final today = DateTime.now();
+  for (final log in logs) {
+    final date = log.date;
+    if (date == null) continue;
+    if (date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day) {
+      return log;
+    }
+  }
+  return null;
+});
+
+/// Check-ins already recorded today, newest first.
+///
+/// Empty means the next entry is the first of the day — the one that carries
+/// last night's sleep. Non-empty means it is a check-in in between, which is a
+/// different thing to record and reads differently on the form.
+final todaysCheckinsProvider = FutureProvider<List<Checkin>>((ref) async {
+  final checkins = await ref.watch(checkinHistoryProvider.future);
+  final today = DateTime.now();
+
+  final mine = <Checkin>[];
+  for (final checkin in checkins) {
+    final at = checkin.recordedAt;
+    if (at == null) continue;
+    if (at.year == today.year &&
+        at.month == today.month &&
+        at.day == today.day) {
+      mine.add(checkin);
+    }
+  }
+
+  mine.sort((a, b) => b.recordedAt!.compareTo(a.recordedAt!));
+  return mine;
 });
 
 /// Imperative check-in actions. Errors are rethrown so the calling screen can
