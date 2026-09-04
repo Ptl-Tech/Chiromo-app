@@ -23,6 +23,7 @@ import '../features/patient/presentation/screens/patient_records_screen.dart';
 import '../features/patient/presentation/screens/appointment_history_screen.dart';
 import '../features/patient/presentation/screens/cbt_tools_screen.dart';
 import '../features/patient/presentation/screens/thought_record_screen.dart';
+import '../features/patient/presentation/screens/thought_record_wizard_screen.dart';
 import '../features/patient/presentation/screens/behavioral_activation_screen.dart';
 import '../features/patient/presentation/screens/create_exposure_ladder_screen.dart';
 import '../features/patient/presentation/screens/exposure_ladder_detail_screen.dart';
@@ -360,6 +361,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/patient/cbt/thought-record',
         name: 'thought-record',
         pageBuilder: (_, _) => _fadePage(const ThoughtRecordScreen()),
+      ),
+      GoRoute(
+        path: '/patient/cbt/thought-record/new',
+        name: 'thought-record-new',
+        pageBuilder: (_, _) => _fadePage(const ThoughtRecordWizardScreen()),
       ),
       GoRoute(
         path: '/patient/cbt/behavioral-activation',
